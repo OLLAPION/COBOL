@@ -1,0 +1,10 @@
+000001	//COMPPGM JOB COMPIL,'COMPPGM',MSGLEVEL=(1,1),REGION=4M,              
+000002	//     MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                              
+000003	//*==================================================================*
+000004	//*  RENDRE UN JCL_COBOL EXECUTABLE                                  *
+000005	//*==================================================================*
+000006	//COMPIL       EXEC IGYWCL                                            
+000007	//COBOL.SYSIN  DD DSN=FTEST.COBOL.SOURCE(READKSDS),DISP=SHR           
+000008	//LKED.SYSLMOD DD DSN=FTEST.COBOL.LOAD(READKSDS),DISP=OLD             
+000009	/*                                                                    
+000010	//                                                                    

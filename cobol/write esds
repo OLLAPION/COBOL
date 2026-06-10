@@ -1,0 +1,44 @@
+000100	       IDENTIFICATION DIVISION.                
+000200	       PROGRAM-ID. WRITESDS.                   
+000300	       ENVIRONMENT DIVISION.                   
+000400	       CONFIGURATION SECTION.                  
+000500	       SOURCE-COMPUTER. IBM-ZOS.               
+000600	       OBJECT-COMPUTER. IBM-ZOS.               
+000700	       INPUT-OUTPUT SECTION.                   
+000800	       FILE-CONTROL.                           
+000900	           SELECT EMPLOYE ASSIGN TO AS-IN1     
+001000	              ORGANIZATION IS SEQUENTIAL       
+001100	              ACCESS MODE IS SEQUENTIAL        
+001200	              FILE STATUS IS TEST-STATUS.      
+001300	       DATA DIVISION.                          
+001400	       FILE SECTION.                           
+001500	       FD EMPLOYE.                             
+001600	       01 ENR-EMPLOYE.                         
+001700	          05 ID-EMPLOYE    PIC X(6).           
+001800	          05 FILLER        PIC X.              
+001900	          05 NAME-EMPLOYE  PIC A(10).          
+002000	          05 FILLER        PIC X(2).            
+002100	          05 VILLE-EMPLOYE PIC X(6).            
+002200	          05 FILLER        PIC X(55).           
+002300	       WORKING-STORAGE SECTION.                 
+002400	       01 WS-EMPLOYE.                           
+002500	          05 WS-ID-EMPLOYE    PIC X(6).         
+002600	          05 FILLER           PIC X.            
+002700	          05 WS-NAME-EMPLOYE  PIC A(10).        
+002800	          05 FILLER           PIC X(2).         
+002900	          05 WS-VILLE-EMPLOYE PIC X(6).         
+003000	          05 FILLER           PIC X(55).        
+003100	       01 TEST-STATUS PIC 99.                   
+003200	       01 WS-EOF PIC A(1).                      
+003300	       PROCEDURE DIVISION.                      
+003400	           INITIALIZE TEST-STATUS.              
+003500	           OPEN EXTEND EMPLOYE.                 
+003600	           IF TEST-STATUS = '00' THEN           
+003700	              DISPLAY 'OPEN IS OK'              
+003800	           ELSE                                 
+003900	              DISPLAY 'OPEN ERROR' TEST-STATUS. 
+004000	           MOVE '000004' TO WS-ID-EMPLOYE.   
+004100	           MOVE 'JEAN' TO WS-NAME-EMPLOYE.   
+004200	           WRITE ENR-EMPLOYE FROM WS-EMPLOYE 
+004300	           END-WRITE.                        
+004400	           CLOSE EMPLOYE. STOP RUN.          

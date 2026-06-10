@@ -1,0 +1,10 @@
+//EXECPGM  JOB COMPIL,'EXECPGM',MSGLEVEL=(1,1),REGION=4M,             
+//     MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                              
+//*==================================================================*
+//*  LANCER UN JCL_COBOL EXECUTABLE                                   
+//*==================================================================*
+//STEPBIEN     EXEC PGM=OPENFILE                                      
+//STEPLIB      DD DSN=FTEST.COBOL.LOAD,DISP=SHR                       
+//SYSOUT       DD SYSOUT=*                                            
+/*                                                                    
+//                                                                    

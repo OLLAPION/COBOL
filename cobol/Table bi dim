@@ -1,0 +1,55 @@
+000100	       IDENTIFICATION DIVISION.           
+000200	       PROGRAM-ID. TABBIDIM.              
+000300	       ENVIRONMENT DIVISION.              
+000400	       CONFIGURATION SECTION.             
+000500	       SOURCE-COMPUTER. IBM-ZOS.          
+000600	       OBJECT-COMPUTER. IBM-ZOS.          
+000700	       INPUT-OUTPUT SECTION.              
+000800	       FILE-CONTROL.                      
+000900	           SELECT FPRINT ASSIGN TO DDPRINT
+001000	           ORGANIZATION IS SEQUENTIAL     
+001100	           ACCESS MODE IS SEQUENTIAL      
+001200	           FILE STATUS IS FS.             
+001300	       DATA DIVISION.                     
+001400	       FILE SECTION.                      
+001500	       FD FPRINT.                         
+001600	       01  REC-PRT.                       
+001700	          05 ENG-PRT  PIC  X(130).        
+001800	       WORKING-STORAGE SECTION.           
+001900	       01 TABLE-TEST.                     
+002000	           05 VAR1  OCCURS 10 TIMES INDEXED BY I.       
+002100	              10 VAR2  PIC A(10).                       
+002200	              10 VAR3  OCCURS 5 TIMES INDEXED BY J.     
+002300	                 15 WS-D PIC X(6).                      
+002400	       01 FS PIC   99.                                  
+002500	       PROCEDURE DIVISION.                              
+002600	           MOVE 'EMP1' TO VAR2(1).                      
+002700	           MOVE 'EMP2' TO VAR2(2).                      
+002800	           MOVE 'EMP3' TO VAR2(3).                      
+002900	           MOVE 'EMP4' TO VAR2(4).                      
+003000	           MOVE 'EMP5' TO VAR2(5).                      
+003100	           MOVE 'SAL1' TO WS-D(1 , 1).                  
+003200	           MOVE 'SAL2' TO WS-D(2 , 2).                  
+003300	           MOVE 'SAL3' TO WS-D(5 , 5).                  
+003400	           MOVE 'SAL4' TO WS-D(3 , 1).                  
+003500	           MOVE 'SAL5' TO WS-D(4 , 2).                  
+003600	           MOVE 'SAL6' TO WS-D(2 , 3).                  
+003700	           MOVE 'SAL7' TO WS-D(4 , 4).                  
+003800	           MOVE 'SAL8' TO WS-D(6 , 1).                  
+003900	           MOVE 'SAL9' TO WS-D(6 , 5).          
+004000	      *    PERFORM A-PARA VARYING I FROM 1 BY 1 UNTIL I > 10.       
+004100	           PERFORM B-PARA.                                          
+004200	           STOP RUN.                                                
+004300	       A-PARA.                                                      
+004400	           DISPLAY 'VAR2(I) : ' VAR2(I).                            
+004500	           PERFORM C-PARA VARYING J FROM 1 BY 1 UNTIL J > 5.        
+004600	       B-PARA.                                                      
+004700	           SET I TO 6.                                              
+004800	           SET J TO 5.                                              
+004900	           DISPLAY 'WS-D : ' WS-D ( I , J ).                        
+005000	           SET I TO 3.                                              
+005100	           SET J TO 3.                                              
+005200	           SET I J UP BY 1.                                         
+005300	           DISPLAY 'WS-D = SAL7 ' WS-D ( I , J ).                   
+005400	       C-PARA.                                                      
+005500	           DISPLAY 'WS-D : ' WS-D( I , J ).                         

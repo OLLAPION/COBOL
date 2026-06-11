@@ -1,0 +1,67 @@
+000100	       IDENTIFICATION DIVISION.                
+000200	       PROGRAM-ID. WRITKSDS.                   
+000300	                                               
+000400	       ENVIRONMENT DIVISION.                   
+000500	       CONFIGURATION SECTION.                  
+000600	       SOURCE-COMPUTER. IBM-ZOS.               
+000700	       OBJECT-COMPUTER. IBM-ZOS.               
+000800	       INPUT-OUTPUT SECTION.                   
+000900	       FILE-CONTROL.                           
+001000	           SELECT EMPLOYE                      
+001100	                  ASSIGN       TO AS-IN1       
+001200	                  ORGANIZATION IS SEQUENTIAL   
+001300	                  ACCESS MODE  IS SEQUENTIAL   
+001400	                  FILE STATUS  IS FILE-STATUS. 
+001500	                                               
+001600	       DATA DIVISION.                          
+001700	       FILE SECTION.                           
+001800	       FD EMPLOYE.                             
+001900	       01 ENR-EMPLOYE.                         
+002000	          05 ID-EMPLOYE    PIC X(6).      
+002100	          05 FILLER        PIC X.         
+002200	          05 NAME-EMPLOYE  PIC A(10).     
+002300	          05 FILLER        PIC X.         
+002400	          05 VILLE-EMPLOYE PIC X(6).      
+002500	          05 FILLER        PIC X(56).     
+002600	                                          
+002700	       WORKING-STORAGE SECTION.           
+002800	       01 WS-EMPLOYE.                     
+002900	          05 WS-ID-EMPLOYE    PIC X(6).   
+003000	          05 FILLER           PIC X.      
+003100	          05 WS-NAME-EMPLOYE  PIC A(10).  
+003200	          05 FILLER           PIC X.      
+003300	          05 WS-VILLE-EMPLOYE PIC X(6).   
+003400	          05 FILLER           PIC X(56).  
+003500	       01 FILE-STATUS PIC 99.             
+003600	       01 WS-EOF PIC A(1).                
+003700	                                          
+003800	       PROCEDURE DIVISION.                
+003900	           INITIALIZE FILE-STATUS.        
+004000	           MOVE 'N' TO WS-EOF.                                          
+004100	           OPEN I-O EMPLOYE.                                            
+004200	                                                                        
+004300	           IF FILE-STATUS NOT = '00'                                    
+004400	              DISPLAY 'OPEN ERROR ' FILE-STATUS                         
+004500	           ELSE                                                         
+004600	              PERFORM UNTIL WS-EOF = 'Y'                                
+004700	                 READ EMPLOYE                                           
+004800	                    AT END                                              
+004900	                       DISPLAY 'FIN FICHIER'                            
+005000	                       MOVE 'Y' TO WS-EOF                               
+005100	                    NOT AT END                                          
+005200	                       IF ID-EMPLOYE = '000006'                         
+005300	                          MOVE 'JEAN-PAUL' TO NAME-EMPLOYE              
+005400	                          REWRITE ENR-EMPLOYE                           
+005500	                                                                        
+005600	                             IF FILE-STATUS = '00'                      
+005700	                                DISPLAY 'MODIFICATION OK'               
+005800	                             ELSE                                       
+005900	                                DISPLAY 'ERREUR REWRITE : ' FILE-STATUS 
+006000	                             END-IF             
+006100	                                                
+006200	                             MOVE 'Y' TO WS-EOF 
+006300	                       END-IF                   
+006400	                 END-READ                       
+006500	              END-PERFORM                       
+006600	           END-IF.                              
+006700	           CLOSE EMPLOYE. STOP RUN.             

@@ -1,0 +1,56 @@
+000100	       IDENTIFICATION DIVISION.                   
+000200	       PROGRAM-ID. WRITKSDS.                      
+000300	                                                  
+000400	       ENVIRONMENT DIVISION.                      
+000500	       CONFIGURATION SECTION.                     
+000600	       SOURCE-COMPUTER. IBM-ZOS.                  
+000700	       OBJECT-COMPUTER. IBM-ZOS.                  
+000800	       INPUT-OUTPUT SECTION.                      
+000900	       FILE-CONTROL.                              
+001000	           SELECT EMPLOYE                         
+001100	                  ASSIGN       TO IN1             
+001200	                  ORGANIZATION IS INDEXED         
+001300	                  ACCESS MODE  IS RANDOM          
+001400	                  RECORD KEY   IS ID-EMPLOYE      
+001500	                  FILE STATUS  IS FILE-STATUS.    
+001600	                                                  
+001700	       DATA DIVISION.                             
+001800	       FILE SECTION.                              
+001900	       FD EMPLOYE.                                
+002000	       01 ENR-EMPLOYE.                     
+002100	          05 ID-EMPLOYE    PIC X(6).       
+002200	          05 FILLER        PIC X.          
+002300	          05 NAME-EMPLOYE  PIC A(10).      
+002400	          05 FILLER        PIC X(2).       
+002500	          05 VILLE-EMPLOYE PIC X(6).       
+002600	          05 FILLER        PIC X(55).      
+002700	                                           
+002800	       WORKING-STORAGE SECTION.            
+002900	       01 WS-EMPLOYE.                      
+003000	          05 WS-ID-EMPLOYE    PIC X(6).    
+003100	          05 FILLER           PIC X.       
+003200	          05 WS-NAME-EMPLOYE  PIC A(10).   
+003300	          05 FILLER           PIC X(2).    
+003400	          05 WS-VILLE-EMPLOYE PIC X(6).    
+003500	          05 FILLER           PIC X(55).   
+003600	       01 FILE-STATUS PIC 99.              
+003700	       01 WS-EOF PIC A(1).                 
+003800	                                           
+003900	       PROCEDURE DIVISION.                 
+004000	           INITIALIZE FILE-STATUS.                 
+004100	           OPEN I-O EMPLOYE.                       
+004200	                                                   
+004300	           IF FILE-STATUS = '00' THEN              
+004400	              DISPLAY 'OPEN IS OK'                 
+004500	           ELSE                                    
+004600	              DISPLAY 'OPEN ERROR' FILE-STATUS.    
+004700	                                                   
+004800	           MOVE '000009' TO ID-EMPLOYE.            
+004900	                                                   
+005000	           DELETE EMPLOYE RECORD                   
+005100	              INVALID KEY                          
+005200	                 DISPLAY 'INVALID KEY' FILE-STATUS 
+005300	              NOT INVALID KEY                      
+005400	                 DISPLAY 'ENR DELETED'             
+005500	           END-DELETE.                             
+005600	           CLOSE EMPLOYE. STOP RUN.                

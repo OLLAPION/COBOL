@@ -64,3 +64,33 @@
 006400	              END-REWRITE                                   
 006500	           END-IF.                                          
 006600	           CLOSE EMPLOYE. STOP RUN.                         
+
+OPTIMISATION POSSIBLE : 
+
+OPEN I-O EMPLOYE
+
+IF FILE-STATUS NOT = '00'
+   DISPLAY 'OPEN ERROR ' FILE-STATUS
+ELSE
+   DISPLAY 'OPEN IS OK'
+
+   MOVE '000006' TO ID-EMPLOYE
+
+   READ EMPLOYE
+      INVALID KEY
+         DISPLAY 'EMPLOYE INEXISTANT ' FILE-STATUS
+      NOT INVALID KEY
+         MOVE 'JEAN-PAUL' TO NAME-EMPLOYE
+
+         REWRITE ENR-EMPLOYE
+            INVALID KEY
+               DISPLAY 'ERREUR REWRITE : ' FILE-STATUS
+            NOT INVALID KEY
+               DISPLAY 'MODIFICATION OK'
+         END-REWRITE
+   END-READ
+
+   CLOSE EMPLOYE
+END-IF
+
+STOP RUN.

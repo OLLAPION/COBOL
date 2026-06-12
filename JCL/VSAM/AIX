@@ -1,0 +1,27 @@
+000100	//DEFAIX   JOB (FILEAIX),'DEFAIX',MSGLEVEL=(1,1),REGION=4M,         
+000200	//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                       
+000300	//*==============================================================*  
+000400	//*    ->  DEFINITION D'UN FICHIER AIX   INDEX ALTERNATIF           
+000500	//*==============================================================*  
+000600	//STEPKSDS EXEC PGM=IDCAMS                                          
+000700	//SYSPRINT DD SYSOUT=*                                              
+000800	//SYSIN    DD *                                                     
+000900	    DELETE FTEST.AIX.KSDS CLUSTER                                   
+001000	    SET MAXCC = 0                                                   
+001100	    DEFINE AIX (NAME(FTEST.AIX.KSDS)  -                             
+001200	            RELATE(FTEST.KSDS)        -                             
+001300	            TRACKS ( 1 1 )            -                             
+001400	            VOL (FDDBAS)              -                             
+001500	            CISZ ( 4096 )             -                             
+001600	            RECORDSIZE (  80  80 )    -                             
+001700	            KEYS (  10 7 )            -                             
+001800	            FREESPACE ( 10 10 )       -                             
+001900	            REUSE                     -                             
+002000	            UPGRADE                   -
+002100	            NONUNIQUEKEY )            -
+002200	    DATA (NAME(FTEST.AIX.KSDS.DATA))  -
+002300	    INDEX (NAME(FTEST.AIX.KSDS.INDEX)) 
+002400	    IF LASTCC=0 THEN                  -
+002500	    LISTCAT ALL LEVEL (FTEST.AIX.KSDS) 
+002600	/*                                     
+002700	//                                     

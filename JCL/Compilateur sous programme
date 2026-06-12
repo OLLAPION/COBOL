@@ -1,0 +1,31 @@
+000001	//COMPLINK JOB COMPLNK,'COMPLNK',MSGLEVEL=(1,1),REGION=4M,              
+000002	//     MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                                
+000003	//*==================================================================*  
+000004	//*  COMPILATEUR DE SOUS-PROGRAMME                                 *    
+000005	//*==================================================================*  
+000006	//COMPIL   EXEC PGM=IGYCRCTL,PARM='OBJECT'                              
+000007	//STEPLIB  DD DSN=IGY420.SIGYCOMP,DISP=SHR                              
+000008	//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000009	//SYSUT2   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000010	//SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000011	//SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000012	//SYSUT5   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000013	//SYSUT6   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000014	//SYSUT7   DD UNIT=SYSDA,SPACE=(CYL,(1,1))                              
+000015	//SYSPRINT DD SYSOUT=A                                                  
+000016	//COBOL.SYSIN  DD DSN=FTEST.COBOL.SOURCE(SOUSPGM1),DISP=SHR             
+000017	//COBOL.SYSLIN DD DSN=FTEST.COBOL.LINK(SOUSPGM1),DISP=SHR               
+000018	/*                                                                      
+000019	//*=============================================================        
+000020	//* ETAPE DE LINKAGE DES PROGRAMMES                             
+000021	//*=============================================================
+000022	//LKED     EXEC PGM=IEWBLINK,COND=(8,LT,COMPIL),REGION=0M       
+000023	//SYSLIB   DD DSN=CEE.SCEELKED,DISP=SHR                         
+000024	//         DD DSN=CEE.SCEELKEX,DISP=SHR                         
+000025	//         DD DSN=FTEST.COBOL.LINK,DISP=SHR                     
+000026	//SYSPRINT DD SYSOUT=*                                          
+000027	//LKED.SYSLIN DD DSN=FTEST.COBOL.LINK(SOUSPGM1),DISP=SHR        
+000028	//SYSLMOD  DD DSN=FTEST.COBOL.LOAD(SOUSPGM1),DISP=SHR           
+000029	//SYSUT1   DD UNIT=SYSALLDA,SPACE=(CYL,(1,1))                   
+000030	/*                                                              
+000031	//                                                              

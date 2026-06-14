@@ -1,0 +1,50 @@
+000100	       IDENTIFICATION DIVISION.               
+000200	       PROGRAM-ID. READKSD3.                  
+000300	       ENVIRONMENT DIVISION.                  
+000400	       CONFIGURATION SECTION.                 
+000500	       SOURCE-COMPUTER. IBM-ZOS.              
+000600	       OBJECT-COMPUTER. IBM-ZOS.              
+000700	       INPUT-OUTPUT SECTION.                  
+000800	       FILE-CONTROL.                          
+000900	           SELECT FEMPL   ASSIGN TO EMPLOYE   
+001000	              ORGANIZATION IS INDEXED         
+001100	              ACCESS MODE IS RANDOM           
+001200	              RECORD KEY IS ID-EMP            
+001300	              ALTERNATE RECORD KEY IS KEY-PATH
+001400	              FILE STATUS IS FS.              
+001500	       DATA DIVISION.                         
+001600	       FILE SECTION.                          
+001700	       FD FEMPL.                              
+001800	       01 REC-EMPL.                           
+001900	          05 ID-EMP        PIC X(03).         
+002000	          05 NOM-EMP       PIC X(15).       
+002100	          05 ADR-EMP       PIC X(12).       
+002200	          05 KEY-PATH      PIC X(13).       
+002300	          05 FILLER        PIC X(37).       
+002400	       WORKING-STORAGE SECTION.             
+002500	       01 WS-EMPL.                          
+002600	          05 WSID-EMP        PIC X(03).     
+002700	          05 WSNOM-EMP        PIC X(15).    
+002800	          05 WSADR-EMP        PIC X(12).    
+002900	          05 WSKEYPATH        PIC X(13).    
+003000	          05 WSFILLER         PIC X(37).    
+003100	       01 WS-KEY-PATH         PIC X(13).    
+003200	       01 FS          PIC 99.               
+003300	       01 WSEOF PIC A(1).                   
+003400	       PROCEDURE DIVISION.                  
+003500	           DISPLAY 'MISE A JOUR DONNEE EMP'.
+003600	           OPEN INPUT  FEMPL.               
+003700	           DISPLAY 'OPEN FILE STATUS : ' FS.
+003800	           MOVE 'COMMERCANT' TO WS-KEY-PATH.
+003900	           MOVE WS-KEY-PATH TO KEY-PATH.    
+004000	           READ FEMPL   RECORD INTO WS-EMPL                  
+004100	              KEY IS KEY-PATH                                
+004200	              INVALID KEY DISPLAY 'KEY IS NOT EXISTING : ' FS
+004300	              NOT INVALID KEY DISPLAY 'NOT INVALID KEY : ' FS
+004400	                  DISPLAY REC-EMPL                           
+004500	           END-READ.                                         
+004600	           DISPLAY 'ID-EMP  : ' WSID-EMP.                    
+004700	           DISPLAY 'NOM-EMP : ' WSNOM-EMP.                   
+004800	           DISPLAY 'ADR-EMP : ' WSADR-EMP.                   
+004900	           CLOSE FEMPL.                                      
+005000	           STOP RUN.                                           

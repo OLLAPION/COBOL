@@ -1,0 +1,11 @@
+000001	//PRTLIST JOB PRTLST,'PRTLIST',MSGLEVEL=(1,1),REGION=4M,               
+000002	//     MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                               
+000003	//*==================================================================* 
+000004	//*  EDITION D'UNE LISTE SUR L'IMPRIMANTE                            * 
+000005	//*==================================================================* 
+000006	//JOBLIB       DD DSN=FTEST.COBOL.LOAD,DISP=SHR                        
+000007	//COMPIL       EXEC PGM=PGMEDIT1   // à ajuster quand je mettrai le programme                                    
+000008	//PATHCODE     DD DSN=FTEST.PATH.CODE,DISP=SHR                         
+000009	//SYSOUT       DD SYSOUT=*                                             
+000010	/*                                                                     
+000011	//                                                                     

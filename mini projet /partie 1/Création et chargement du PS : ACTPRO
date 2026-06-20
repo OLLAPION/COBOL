@@ -1,0 +1,24 @@
+000100	//CREAPRO  JOB (CREAPRO),'CREAPRO',MSGLEVEL=(1,1),REGION=4M,           
+000200	//             MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                       
+000300	//*-------------------------------------------------------------------*
+000400	//* CREATION ET CHARGEMENT DU FICHIER PS ACTPRO VIA IDCAMS            *
+000500	//*-------------------------------------------------------------------*
+000600	//STEP1    EXEC PGM=IDCAMS                                             
+000700	//SYSPRINT DD SYSOUT=*                                                 
+000800	//OUTPS    DD DSN=PALLO.FINANCE.ACTPRO,                                
+000900	//            DISP=(NEW,CATLG,DELETE),                                 
+001000	//            SPACE=(TRK,(1,1)),                                       
+001100	//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=800),                     
+001200	//            UNIT=SYSDA,VOL=SER=FDDBAS                                
+001300	//INPDATA  DD *                                                        
+001400	05MEDECIN                                                              
+001500	10INGENIEUR                                                            
+001600	15COMPTABLE                                                            
+001700	20COMMERCANT                                                           
+001800	25FONCTIONNAIRE                                                        
+001900	30PRIVEE                                                               
+002000	/*                                         
+002100	//SYSIN    DD *                            
+002200	  REPRO INFILE(INPDATA) OUTFILE(OUTPS)     
+002300	/*                                         
+002400	//                                         

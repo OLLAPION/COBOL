@@ -1,0 +1,49 @@
+000100	//ESDSMED  JOB (ESDSMED),'ESDSMED',MSGLEVEL=(1,1),REGION=4M,       
+000200	//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                      
+000300	//*==============================================================* 
+000400	//*    ->  DEFINITION ESDS MEDECIN                                 
+000500	//*==============================================================* 
+000600	//STEP1    EXEC PGM=IDCAMS                                         
+000700	//SYSPRINT DD SYSOUT=*                                             
+000800	//SYSIN    DD *                                                    
+000900	    DELETE PALLO.FINANCE.CLIENT.MEDEPS                             
+000901	    SET MAXCC = 0                                                  
+000910	    DELETE PALLO.FINANCE.CLIENT.MEDECIN CLUSTER PURGE              
+001000	    SET MAXCC = 0                                                  
+001100	    DEFINE CLUSTER (NAME(PALLO.FINANCE.CLIENT.MEDECIN)  -          
+001200	            TRACKS ( 1 1 )            -                            
+001300	            VOL (FDDBAS)              -                            
+001400	            CISZ ( 4096 )             -                            
+001500	            RECORDSIZE (  80  80 )    -                            
+001600	            SHAREOPTIONS ( 1 3 )      -                            
+001700	            NONINDEXED                -                            
+001800	            REUSE ) -                                             
+001900	    DATA (NAME(PALLO.FINANCE.CLIENT.MEDECIN.DATA))                
+002000	/*                                                                
+002010	//*==============================================================*
+002020	//*    ->  COPY VIA SORT DES MEDECIN DANS UN PS                   
+002030	//*==============================================================*
+002100	//STEP2    EXEC PGM=SORT                                          
+002200	//SYSOUT   DD SYSOUT=*                                            
+002300	//SORTIN   DD DSN=PALLO.FINANCE.CLIENT.ESDS,DISP=SHR              
+002400	//SORTOUT  DD DSN=PALLO.FINANCE.CLIENT.MEDEPS,                    
+002500	//            DISP=(NEW,CATLG,DELETE),                            
+002600	//            VOL=SER=FDDBAS,                                     
+002700	//            SPACE=(TRK,(1,1)),                                  
+002800	//            DCB=(LRECL=80,BLKSIZE=800,RECFM=FB)                 
+002900	//SYSIN    DD *                                                   
+003000	    SORT FIELDS=COPY                                              
+003100	    INCLUDE COND=(37,2,CH,EQ,C'05')                               
+003200	/*                                                                
+003210	//*==============================================================*
+003220	//*    ->  REPRO DU FICHIER PS A L'ESDS MEDECIN                   
+003230	//*==============================================================*
+003300	//STEP3    EXEC PGM=IDCAMS                                        
+003400	//SYSPRINT DD SYSOUT=*                                            
+003500	//INFILE   DD DSN=PALLO.FINANCE.CLIENT.MEDEPS,DISP=SHR            
+003600	//OUTFILE  DD DSN=PALLO.FINANCE.CLIENT.MEDECIN,DISP=OLD           
+004100	//SYSOUT   DD SYSOUT=*                                            
+004200	//SYSIN    DD *                                                   
+004300	    REPRO INFILE(INFILE) OUTFILE(OUTFILE)                         
+004400	/*                                                                
+004500	//                                                                

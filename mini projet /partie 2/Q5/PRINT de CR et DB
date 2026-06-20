@@ -1,0 +1,9 @@
+// A ajouter à la fin de CR ou DB
+
+004900	//STEP4    EXEC PGM=IDCAMS                       
+004910	//SYSPRINT DD SYSOUT=*                           
+004920	//SYSIN    DD *                                  
+005000	    PRINT INDATASET(PALLO.FINANCE.CLIENT.CR) CHAR
+005010	    PRINT INDATASET(PALLO.FINANCE.CLIENT.DB) CHAR
+005100	/*                                               
+005200	//                                               

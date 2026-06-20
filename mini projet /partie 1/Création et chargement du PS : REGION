@@ -1,0 +1,21 @@
+000100	//CREAREG  JOB (CREAREG),'CREAREG',MSGLEVEL=(1,1),REGION=4M,            
+000200	//             MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                        
+000300	//*-------------------------------------------------------------------* 
+000400	//* CREATION DU PS : PALLO.FINANCE.REGION                             * 
+000500	//*-------------------------------------------------------------------* 
+000600	//STEP1    EXEC PGM=IEBGENER                                            
+000700	//SYSPRINT DD SYSOUT=*                                                  
+000800	//SYSUT2   DD DSN=PALLO.FINANCE.REGION,                                 
+000900	//            DISP=(NEW,CATLG,DELETE),                                  
+001000	//            SPACE=(TRK,(1,1)),                                        
+001100	//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=800),                      
+001200	//            UNIT=SYSDA,VOL=SER=FDDBAS                                 
+001300	//SYSUT1   DD *                                                         
+001400	01PARIS                                                                 
+001500	02MARSEILLE                                                             
+001600	03LYON                                                                  
+001700	04LILLE                                                                 
+001800	/*                                                                      
+001900	//SYSIN    DD DUMMY                                                     
+002000	/*
+002100	//

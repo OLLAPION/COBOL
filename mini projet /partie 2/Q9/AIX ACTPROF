@@ -1,0 +1,27 @@
+000100	//DEFAIX   JOB (FILEAIX),'DEFAIX',MSGLEVEL=(1,1),REGION=4M,       
+000200	//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                     
+000300	//*==============================================================*
+000400	//*   ->  DEFINITION D'UN FICHIER AIX   INDEX ALTERNATIF          
+000500	//*==============================================================*
+000600	//STEPKSDS EXEC PGM=IDCAMS                                        
+000700	//SYSPRINT DD SYSOUT=*                                            
+000800	//SYSIN    DD *                                                   
+000900	     DELETE PALLO.AIX.ACTPROF CLUSTER PURGE                       
+001000	     SET MAXCC = 0                                                
+001100	     DEFINE AIX (NAME(PALLO.AIX.ACTPROF) -                        
+001200	     RELATE(PALLO.FINANCE.CLIENT.KSDS)   -                        
+001300	     TRACKS ( 1 1 )            -                                  
+001400	     VOL (FDDBAS)              -                                  
+001500	     CISZ ( 4096 )             -                                  
+001600	     RECORDSIZE (  80  80 )    -                                  
+001700	     KEYS (   2 3 )            -                                  
+001800	     FREESPACE ( 10 10 )       -                                  
+001900	     REUSE                     -         
+002000	     UPGRADE                   -                  
+002100	     NONUNIQUEKEY )            -                  
+002200	     DATA (NAME(PALLO.AIX.ACTPROF.DATA))  -       
+002300	     INDEX (NAME(PALLO.AIX.ACTPROF.INDEX))        
+002400	     IF LASTCC=0 THEN                             
+002500	     LISTCAT ALL LEVEL (PALLO.FINANCE.CLIENT.KSDS)
+002600	/*                                                
+002700	//                                                

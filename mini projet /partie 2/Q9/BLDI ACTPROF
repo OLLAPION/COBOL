@@ -1,0 +1,15 @@
+000100	//DEFBLDI  JOB (FILBLDI),'DFBLDI',MSGLEVEL=(1,1),REGION=4M,       
+000200	//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                     
+000300	//*==============================================================*
+000400	//*    ->  CONTRUCTION DE L'INDEX                                 
+000500	//*==============================================================*
+000600	//STEPKSDS EXEC PGM=IDCAMS                                        
+000700	//SYSPRINT DD SYSOUT=*                                            
+000800	//SYSIN    DD *                                                   
+000900	     BLDINDEX                           -                         
+001000	             INDATASET (PALLO.FINANCE.CLIENT.KSDS) -              
+001100	             OUTDATASET (PALLO.AIX.ACTPROF) -                     
+001110	             NOSORTCALL                                           
+001200	     LISTCAT ALL ENT   (PALLO.AIX.ACTPROF)                        
+002600	/*                                                                
+002700	//                                                                

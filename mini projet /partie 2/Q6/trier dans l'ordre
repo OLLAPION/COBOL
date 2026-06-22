@@ -1,0 +1,13 @@
+002500	//* TRI DU FICHIER F4 EN F4S                       
+002600	//SORTF1 EXEC PGM=SORT                             
+002700	//SORTIN   DD DSN=FTEST.FILEPS.F4,DISP=SHR         
+002800	//SORTOUT  DD DSN=FTEST.FILEPS.F4S,                
+002900	//            DISP=(NEW,CATLG,DELETE),             
+003000	//            UNIT=3390,                           
+003100	//            VOL=SER=FDDBAS,                      
+003200	//            SPACE=(TRK,(1,1)),                   
+003300	//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)  
+003400	//SYSOUT   DD SYSOUT=*                             
+003500	//SYSIN    DD *                                    
+003600	  SORT FIELDS=(1,6,CH,A)                           
+003700	/*                                                 

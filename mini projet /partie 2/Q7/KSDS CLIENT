@@ -1,0 +1,32 @@
+000100	//DEFKSDS  JOB (DEFKSDS),'DEFKSDS',MSGLEVEL=(1,1),REGION=4M,      
+000200	//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                     
+000300	//*==============================================================*
+000400	//* ->  DEFINITION KSDS + CHARGEMENT DU CHIFIER CLIENT DEJA TRIE         
+000500	//*==============================================================*
+000600	//STEPKSDS EXEC PGM=IDCAMS                                        
+000700	//SYSPRINT DD SYSOUT=*                                            
+000800	//SYSIN    DD *                                                   
+000900	    DELETE PALLO.FINANCE.CLIENT.KSDS CLUSTER PURGE                
+001000	    SET MAXCC = 0                                                 
+001100	    DEFINE CLUSTER (NAME(PALLO.FINANCE.CLIENT.KSDS)  -            
+001200	            TRACKS ( 1 1 )            -                           
+001300	            VOL (FDDBAS)              -                           
+001400	            CISZ ( 4096 )             -                           
+001500	            RECORDSIZE (  80  80 )    -                           
+001600	            SHAREOPTIONS ( 1 3 )      -                           
+001700	            INDEXED                -                              
+001710	            KEYS( 3 0 ) -                                         
+001800	            REUSE ) -                                             
+001900	    DATA (NAME(PALLO.FINANCE.CLIENT.KSDS.DATA)) -   
+001910	    INDEX (NAME(PALLO.FINANCE.CLIENT.KSDS.INDEX))   
+002000	/*                                                  
+002100	//LOADESDS EXEC PGM=IDCAMS                          
+002200	//SYSPRINT DD SYSOUT=*                              
+002300	//SYSIN DD *                                        
+002400	    REPRO                             -             
+002500	        INDATASET(PALLO.FINANCE.CLIENT)    -        
+002600	        OUTDATASET(PALLO.FINANCE.CLIENT.KSDS)       
+002700	    IF LASTCC=0 THEN                  -             
+002800	    LISTCAT ALL LEVEL (PALLO.FINANCE.CLIENT.KSDS)   
+002900	/*                                                  
+003000	//                                                  

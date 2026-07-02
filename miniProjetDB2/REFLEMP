@@ -1,0 +1,273 @@
+000100	       IDENTIFICATION DIVISION.                                         
+000200	       PROGRAM-ID. REFLEMP.                                             
+000300	       ENVIRONMENT DIVISION.                                            
+000400	      *=================================================================
+000500	      *-=-=-=-=-=-=-=-=-=-=-=-=                                         
+000600	       CONFIGURATION SECTION.                                           
+000700	      *-=-=-=-=-=-=-=-=-=-=-=-=                                         
+000800	       SOURCE-COMPUTER. IBM-370.                                        
+000900	       SPECIAL-NAMES. DECIMAL-POINT IS COMMA.                           
+001000	      *=================================================================
+001100	       DATA DIVISION.                                                   
+001200	      *=================================================================
+001300	      *-=-=-=-=-=-=-=-=-=-=-=-=-=                                       
+001400	       WORKING-STORAGE SECTION.                                         
+001410	       01  WS-IDX              PIC 9(02).                               
+001420	       01  WS-TYPACN-DMD       PIC X(03).                               
+001500	       01  WS-EMPSOR-WORK.                                              
+001600	           10  WS-EMPID        PIC 9(4).                                
+001700	           10  WS-NAME         PIC X(15).                               
+001800	           10  WS-NAM2         PIC X(15).                          
+001900	           10  WS-DEPARTMENT   PIC 9(4).                           
+002000	           10  WS-SALARY       PIC 9(11)V99.                       
+002100	           10  WS-DESIGNATION  PIC X(4).                           
+002200	       01  WS-CTL-OK           PIC X(01) VALUE 'O'.                
+002300	           88  CTL-OK          VALUE 'O'.                          
+002400	           88  CTL-NOK         VALUE 'N'.                          
+002410	       01  WS-FIN-LISTE         PIC X(01) VALUE 'N'.               
+002420	           88  FIN-LISTE        VALUE 'O'.                         
+002430	           88  PAS-FIN-LISTE    VALUE 'N'.                         
+002500	      *-=-=-=-=-=-=-=-=-=-=-=-=-=                                  
+002600	       01  FILLER PIC X(30) VALUE '*** DEBUT WORKING REFLEMP ***'. 
+002700	       01  C-SUBPGM PIC X(08) VALUE 'REFPEMP'.                     
+002800	          COPY YEMPENT.                                            
+002900	          COPY YEMPSOR.                                            
+003000	      *-=-=-=-=-=-=-=-=-=                                          
+003100	       LINKAGE SECTION.                                            
+003200	          copy YFCIFAL.                                            
+003300	          COPY YFCIFRE.                                            
+003400	          COPY YEMLENT.         
+003500	          COPY YEMLSOR.                                                 
+003600	      *-=-=-=-=-=-=-=-=-=                                               
+003700	      *=================================================================
+003800	       PROCEDURE DIVISION USING YFCIFAL                                 
+003900	                                YFCIFRE                                 
+004000	                                YEMLENT                                 
+004100	                                YEMLSOR.                                
+004200	      *=================================================================
+004300	      *    Traitement général                                           
+004400	      *=================================================================
+004500	      *     1) INITIALISATIONS                                          
+004700	      *     2) CONTROLE-ARGUMENTS                                       
+004710	      *     3) TRAITEMENT-L1001                                         
+004800	      *     4) APPEL-ACCESSEUR-PHYSIQUE                                 
+004900	      *     4) MAPPING-SORTANT                                          
+005000	      *     5) SORTIE                                                   
+005100	      *=================================================================
+005200	                                                                        
+005300	            PERFORM INITIALISATIONS                                     
+005400	            PERFORM CONTROLE-ARGUMENTS   
+005500	            IF CTL-OK                                                   
+005510	               IF FCIFAL-SceDmd-Fct = 'L1001'                           
+005520	                  PERFORM TRAITEMENT-L1001                              
+005530	               else                                                     
+005600	                  PERFORM APPEL-ACCESSEUR-PHYSIQUE                      
+005700	                  PERFORM MAPPING-SORTANT                               
+005710	               END-IF                                                   
+005800	            END-IF                                                      
+005900	            PERFORM SORTIE                                              
+006000	            GOBACK.                                                     
+006100	                                                                        
+006200	      *=================================================================
+006300	       INITIALISATIONS.                                                 
+006400	      *=========================================================        
+006500	                                                                        
+006600	           INITIALIZE YFCIFRE YEMPENT YEMPSOR                           
+006700	                                                                        
+006800	           DISPLAY '----------------------------------------'           
+006900	           DISPLAY 'Accesseur logique <REFLEMP>'                        
+007000	           DISPLAY 'Fonction demandee : [' FCIFAL-SceDmd-Fct ']'        
+007100	           DISPLAY 'Type action       : [' FCIFAL-CarSceDmd-TypAcn ']' 
+007200	           DISPLAY '----------------------------------------'          
+007300	                                                                       
+007900	           MOVE EMLENT-EMPID        TO EMPENT-EMPID                    
+008000	           MOVE EMLENT-NAME         TO EMPENT-NAME                     
+008100	           MOVE EMLENT-NAM2         TO EMPENT-NAM2                     
+008200	           MOVE EMLENT-DEPARTMENT   TO EMPENT-DEPARTMENT               
+008300	           MOVE EMLENT-SALARY       TO EMPENT-SALARY                   
+008400	           MOVE EMLENT-DESIGNATION  TO EMPENT-DESIGNATION              
+008500	           .                                                           
+008600	      *=========================================================       
+008700	       CONTROLE-ARGUMENTS.                                             
+008800	      *=========================================================       
+008900	                                                                       
+009000	           EVALUATE FCIFAL-SceDmd-Fct                                  
+009100	                                                                       
+009200	             WHEN 'L0001'                                              
+009300	                 IF EMLENT-EMPID = LOW-VALUES                          
+009400	                 OR EMLENT-EMPID = ZERO                                
+009500	                     MOVE '0004' TO FCIFRE-CodRetPmr             
+009600	                     MOVE 'REFLEMP' TO FCIFRE-MsgErrMet-Pgm       
+009700	                     SET CTL-NOK TO TRUE                          
+009800	                 END-IF                                           
+009900	                                                                  
+010000	             WHEN 'I0001'                                         
+010100	                 IF EMLENT-NAME = LOW-VALUES                      
+010200	                 OR EMLENT-NAME = SPACES                          
+010300	                 OR EMLENT-NAM2 = LOW-VALUES                      
+010400	                 OR EMLENT-NAM2 = SPACES                          
+010500	                 OR EMLENT-DEPARTMENT = ZERO                      
+010600	                 OR EMLENT-SALARY = ZERO                          
+010700	                 OR EMLENT-DESIGNATION = LOW-VALUES               
+010800	                 OR EMLENT-DESIGNATION = SPACES                   
+010900	                     MOVE '0005' TO FCIFRE-CodRetPmr              
+011000	                     MOVE 'REFLEMP' TO FCIFRE-MsgErrMet-Pgm       
+011100	                     SET CTL-NOK TO TRUE                          
+011200	                 END-IF                                           
+011300	                                                                  
+011400	             WHEN 'M0001'                                         
+011500	                 IF EMLENT-EMPID = ZERO                           
+011600	                 OR EMLENT-NAME = LOW-VALUES                   
+011700	                 OR EMLENT-NAME = SPACES                       
+011800	                 OR EMLENT-NAM2 = LOW-VALUES                   
+011900	                 OR EMLENT-NAM2 = SPACES                       
+012000	                 OR EMLENT-DEPARTMENT = ZERO                   
+012100	                 OR EMLENT-SALARY = ZERO                       
+012200	                 OR EMLENT-DESIGNATION = LOW-VALUES            
+012300	                 OR EMLENT-DESIGNATION = SPACES                
+012400	                     MOVE '0005' TO FCIFRE-CodRetPmr           
+012500	                     MOVE 'REFLEMP' TO FCIFRE-MsgErrMet-Pgm    
+012600	                     SET CTL-NOK TO TRUE                       
+012700	                 END-IF                                        
+012800	                                                               
+012900	             WHEN 'L1001'                                      
+013000	                 CONTINUE                                      
+013100	                                                               
+013200	             WHEN OTHER                                        
+013300	                 MOVE '0003' TO FCIFRE-CodRetPmr               
+013400	                 MOVE 'REFLEMP' TO FCIFRE-MsgErrMet-Pgm        
+013500	                 SET CTL-NOK TO TRUE                           
+013600	                                                                 
+013700	           END-EVALUATE                                          
+013800	           .                                                     
+013801	      *========================================================= 
+013802	       TRAITEMENT-L1001.                                         
+013803	      *========================================================= 
+013810	           MOVE ZERO TO FCIFRE-NbrLigRet                         
+013811	           SET PAS-FIN-LISTE TO TRUE                             
+013817	           SET FCIFAL-TypAcn-Ini TO TRUE                         
+013820	                                                                 
+013830	           PERFORM VARYING WS-IDX FROM 1 BY 1                    
+013832	               UNTIL WS-IDX > 10                                 
+013833	                  OR FIN-LISTE                                   
+013834	                                                                 
+013835	               DISPLAY 'Debut Appel ==> ' C-SUBPGM               
+013836	               CALL C-SUBPGM USING YFCIFAL                       
+013837	                                   YFCIFRE                       
+013838	                                   YEMPENT                       
+013839	                                   YEMPSOR                       
+013840	               DISPLAY 'Fin Appel   ==> ' C-SUBPGM               
+013841	                                                               
+013842	               IF FCIFRE-CodRetPmr = SPACES                    
+013843	               OR FCIFRE-CodRetPmr = '0000'                    
+013880	                       MOVE EMPSOR-EMPID                       
+013890	                           TO EMLSOR-L1001-EMPID(WS-IDX)       
+013891	                       MOVE EMPSOR-NAME                        
+013892	                           TO EMLSOR-L1001-NAME(WS-IDX)        
+013893	                       MOVE EMPSOR-NAM2                        
+013894	                           TO EMLSOR-L1001-NAM2(WS-IDX)        
+013895	                       MOVE EMPSOR-DEPARTMENT                  
+013896	                           TO EMLSOR-L1001-DEPARTMENT(WS-IDX)  
+013897	                       MOVE EMPSOR-SALARY                      
+013898	                           TO EMLSOR-L1001-SALARY(WS-IDX)      
+013899	                       MOVE EMPSOR-DESIGNATION                 
+013900	                           TO EMLSOR-L1001-DESIGNATION(WS-IDX) 
+013902	                       SET FCIFAL-TypAcn-LecSui TO TRUE        
+013903	               ELSE                                            
+013904	                       SET FIN-LISTE TO TRUE                   
+013905	               END-IF                                          
+013906	                                                               
+013908	           END-PERFORM                                            
+013909	                                                                  
+013910	           SET FCIFAL-TypAcn-FinLec TO TRUE                       
+013911	           CALL C-SUBPGM USING YFCIFAL                            
+013912	                               YFCIFRE                            
+013913	                               YEMPENT                            
+013914	                               YEMPSOR                            
+013915	                                                                  
+013916	           IF FCIFRE-NbrLigRet > 0                                
+013917	               MOVE '0000' TO FCIFRE-CodRetPmr                    
+013918	           END-IF                                                 
+013919	           .                                                      
+013950	      *=========================================================  
+014000	       APPEL-ACCESSEUR-PHYSIQUE.                                  
+014100	      *=========================================================  
+014200	                                                                  
+014300	             DISPLAY 'Debut Appel ==> ' C-SUBPGM                  
+014400	                                                                  
+014500	             CALL C-SUBPGM USING YFCIFAL                          
+014600	                                 YFCIFRE                          
+014700	                                 YEMPENT                             
+014800	                                 YEMPSOR                             
+014900	                                                                     
+015000	             DISPLAY 'Fin Appel   ==> ' C-SUBPGM                     
+015100	             DISPLAY 'CodRetPmr   : [' FCIFRE-CODRETPMR ']'          
+015200	             .                                                       
+015300	      *=========================================================     
+015400	       MAPPING-SORTANT.                                              
+015600	      *=========================================================     
+015700	                                                                     
+015800	           EVALUATE FCIFAL-SceDmd-Fct                                
+015900	                                                                     
+016000	      *---------------------------------------------------------     
+016100	      *  L0001 : Lecture unique employe                              
+016200	      *          EMPSOR-EMPLOYES-SORTIE --> EMLSOR-L0001 (1 ligne)   
+016300	      *---------------------------------------------------------     
+016400	             WHEN 'L0001'                                            
+016500	                 MOVE EMPSOR-EMPID       TO EMLSOR-L0001-EMPID       
+016600	                 MOVE EMPSOR-NAME        TO EMLSOR-L0001-NAME        
+016700	                 MOVE EMPSOR-NAM2        TO EMLSOR-L0001-NAM2        
+016800	                 MOVE EMPSOR-DEPARTMENT  TO EMLSOR-L0001-DEPARTMENT     
+016900	                 MOVE EMPSOR-SALARY      TO EMLSOR-L0001-SALARY         
+017000	                 MOVE EMPSOR-DESIGNATION TO EMLSOR-L0001-DESIGNATION    
+017100	                                                                        
+017200	      *---------------------------------------------------------        
+017300	      *  L1001 : Lecture liste employes                                 
+017400	      *          YEMPSOR redefinit en table --> EMLSOR-L1001 (10occ     
+017500	      *          NbrLigRet dans YFCIFRE indique le nb de lignes         
+017600	      *---------------------------------------------------------        
+017700	             WHEN 'L1001'                                               
+017800	                 MOVE YEMPSOR             TO EMLSOR-L1001               
+017900	                                                                        
+018000	      *---------------------------------------------------------        
+018100	      *  I0001 : Insertion employe                                      
+018200	      *          Pas de partie variable sortie                          
+018300	      *---------------------------------------------------------        
+018400	             WHEN 'I0001'                                               
+018500	                 CONTINUE                                               
+018600	                                                                        
+018700	      *---------------------------------------------------------        
+018800	      *  M0001 : Modification employe                                 
+018900	      *          Pas de partie variable sortie                        
+019000	      *---------------------------------------------------------      
+019100	             WHEN 'M0001'                                             
+019200	                 CONTINUE                                             
+019300	                                                                      
+019400	      *---------------------------------------------------------      
+019500	      *  S0001 : Suppression employe                                  
+019600	      *          Pas de partie variable sortie                        
+019700	      *---------------------------------------------------------      
+019800	             WHEN 'S0001'                                             
+019900	                 CONTINUE                                             
+020000	                                                                      
+020100	      *---------------------------------------------------------      
+020200	             WHEN OTHER                                               
+020300	                 DISPLAY 'REFLEMP : Fonction inconnue ['              
+020400	                         FCIFAL-SceDmd-Fct '] - pas de mapping sortie'
+020500	                                                                      
+020600	           END-EVALUATE                                               
+020700	           .                                                          
+020800	      *=========================================================
+020900	       SORTIE.                                                  
+021000	      *=========================================================
+021100	                                                                
+021200	           DISPLAY '----------------------------------------'   
+021300	           DISPLAY 'Me revoila l''accesseur logique <REFLEMP>'  
+021400	           DISPLAY 'YFCIFRE    <' YFCIFRE                    '>'
+021500	           DISPLAY 'YEMPSOR    <' YEMPSOR                    '>'
+021600	           .                                                    
+
+
+
+                            
+                                   

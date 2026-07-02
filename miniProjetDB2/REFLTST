@@ -1,0 +1,318 @@
+000100	       IDENTIFICATION DIVISION.                                        
+000200	       PROGRAM-ID. REFLTST.                                            
+000300	       ENVIRONMENT DIVISION.                                           
+000400	      *================================================================
+000500	      *-=-=-=-=-=-=-=-=-=-=-=-=                                        
+000600	       CONFIGURATION SECTION.                                          
+000700	      *-=-=-=-=-=-=-=-=-=-=-=-=                                        
+000800	       SOURCE-COMPUTER. IBM-370.                                       
+000900	       SPECIAL-NAMES. DECIMAL-POINT IS COMMA.                          
+001000	      *================================================================
+001100	       DATA DIVISION.                                                  
+001200	      *================================================================
+001300	      *-=-=-=-=-=-=-=-=-=-=-=-=-=                                      
+001400	       WORKING-STORAGE SECTION.                                        
+001500	      *-=-=-=-=-=-=-=-=-=-=-=-=-=                                      
+001600	       01  FILLER PIC X(30) VALUE '*** DEBUT WORKING REFPEMP ***'.     
+001700	       01  C-SUBPGM PIC X(08) VALUE 'REFLEMP'.                         
+001800	      *-=-=-=-=-=-=-=-=-=                                              
+001900	          COPY YFCIFAL.                     
+002000	          COPY YEMLENT.                                                 
+002100	          COPY YFCIFRE.                                                 
+002200	          COPY YEMLSOR.                                                 
+002300	      *-=-=-=-=-=-=-=-=-=                                               
+002400	      *  Variable de selection du test                                  
+002500	      *-=-=-=-=-=-=-=-=-=                                               
+002600	       01  WS-NUM-TEST           PIC X(02).                             
+002700	       01  WS-IDX                PIC 9(02).                             
+002800	       01  WS-MSG-TEST           PIC X(60).                             
+002900	       LINKAGE SECTION.                                                 
+003000	      *-=-=-=-=-=-=-=-=-=                                               
+003100	      *=================================================================
+003200	       PROCEDURE DIVISION.                                              
+003300	      *=================================================================
+003400	      *    Traitement général                                           
+003500	      *=================================================================
+003600	      *     1) Initialisation                                           
+003700	      *     2) Traitement de la fonction                                
+003800	      *     3) Fin de programme                                         
+003900	      *     4) Affichage des résultats     
+004000	      *==============================================================
+004100	      *==============================================================
+004200	      *  LECTURE DU NUMERO DE TEST                                   
+004300	      *==================================================            
+004400	           ACCEPT WS-NUM-TEST FROM SYSIN                             
+004500	                                                                     
+004600	           DISPLAY '====================================='           
+004700	           DISPLAY 'PGM DE TEST <REFLTST>'                           
+004800	           DISPLAY 'TEST SELECTIONNE : [' WS-NUM-TEST ']'            
+004900	           DISPLAY '====================================='           
+005000	                                                                     
+005100	      *=========================================================     
+005200	      *  INITIALISATION COMMUNE AVANT CHAQUE TEST                    
+005300	      *=========================================================     
+005400	           INITIALIZE YFCIFAL YFCIFRE YEMLENT YEMLSOR                
+005500	                                                                     
+005600	      *=========================================================     
+005700	      *  SELECTION ET INITIALISATION DU JEU DE TEST                  
+005800	      *=========================================================     
+005900	           EVALUATE WS-NUM-TEST      
+006000	                                                                     
+006100	      *---------------------------------------------------------     
+006200	      *  TEST-01 : Fournir un code fonction incorrect                
+006300	      *            Resultat attendu : CodRetPmr = '0003'             
+006400	      *            (Arguments partie fixe incorrects)                
+006500	      *---------------------------------------------------------     
+006600	             WHEN '01'                                               
+006700	                 MOVE 'Test-01 : Code fonction incorrect'            
+006800	                                        TO WS-MSG-TEST               
+006900	                 MOVE 'XXXXX'          TO FCIFAL-SceDmd-Fct          
+007000	                 SET FCIFAL-TypAcn-LecPcd TO TRUE                    
+007100	                 MOVE 1001             TO EMLENT-EMPID               
+007200	                                                                     
+007300	      *---------------------------------------------------------     
+007400	      *  TEST-02 : Lecture unique L0001 sans arguments variables     
+007500	      *            Resultat attendu : CodRetPmr = '0004'             
+007600	      *            (Arguments de recherche errones)                  
+007700	      *---------------------------------------------------------     
+007800	             WHEN '02'                                               
+007900	                 MOVE 'Test-02 : L0001 sans args variables'          
+008000	                                        TO WS-MSG-TEST                  
+008100	                 MOVE 'L0001'          TO FCIFAL-SceDmd-Fct             
+008200	                 SET  FCIFAL-TYPACN-UNQ TO TRUE                         
+008300	                 MOVE 0                TO EMLENT-EMPID                  
+008400	                                                                        
+008500	      *-----------------------------------------------------------      
+008600	      *  TEST-03 : Creation employe I0001 sans arguments variables      
+008700	      *            Resultat attendu : CodRetPmr = '0005'                
+008800	      *            (Arguments variables incorrects)                     
+008900	      *-----------------------------------------------------------      
+009000	             WHEN '03'                                                  
+009100	                 MOVE 'Test-03 : I0001 sans args variables'             
+009200	                                        TO WS-MSG-TEST                  
+009300	                 MOVE 'I0001'          TO FCIFAL-SceDmd-Fct             
+009400	                 SET  FCIFAL-TYPACN-ISR TO TRUE                         
+009500	                 MOVE 0                TO EMLENT-EMPID                  
+009600	                 MOVE SPACES           TO EMLENT-NAME                   
+009700	                 MOVE SPACES           TO EMLENT-NAM2                   
+009800	                 MOVE 0                TO EMLENT-DEPARTMENT             
+009900	                 MOVE 0                TO EMLENT-SALARY                 
+010000	                 MOVE SPACES           TO EMLENT-DESIGNATION        
+010100	                                                                    
+010200	      *---------------------------------------------------------    
+010300	      *  TEST-04 : Creation employe I0001 avec arg obligatoire vide 
+010400	      *            Resultat attendu : CodRetPmr = '0005'            
+010500	      *            (Donnees pour mise a jour erronees)              
+010600	      *---------------------------------------------------------    
+010700	             WHEN '04'                                              
+010800	                 MOVE 'Test-04 : I0001 avec arg obligatoire vide'   
+010900	                                        TO WS-MSG-TEST              
+011000	                 MOVE 'I0001'          TO FCIFAL-SceDmd-Fct         
+011100	                 SET  FCIFAL-TYPACN-ISR TO TRUE                     
+011200	                 MOVE 9999             TO EMLENT-EMPID              
+011300	                 MOVE SPACES           TO EMLENT-NAME               
+011400	                 MOVE SPACES           TO EMLENT-NAM2               
+011500	                 MOVE 10               TO EMLENT-DEPARTMENT         
+011600	                 MOVE 50000            TO EMLENT-SALARY             
+011700	                 MOVE 'DEV'            TO EMLENT-DESIGNATION        
+011800	                                                                    
+011900	      *---------------------------------------------------------    
+012000	      *  TEST-05 : MAJ employe M0001 avec arg obligatoire vide    
+012100	      *            Resultat attendu : CodRetPmr = '0005'          
+012200	      *            (Donnees pour mise a jour erronees)            
+012300	      *---------------------------------------------------------  
+012400	             WHEN '05'                                            
+012500	                 MOVE 'Test-05 : M0001 avec arg obligatoire vide' 
+012600	                                        TO WS-MSG-TEST            
+012700	                 MOVE 'M0001'          TO FCIFAL-SceDmd-Fct       
+012800	                 SET  FCIFAL-TYPACN-MOD TO TRUE                   
+012900	                 MOVE 1001             TO EMLENT-EMPID            
+013000	                 MOVE SPACES           TO EMLENT-NAME             
+013100	                 MOVE SPACES           TO EMLENT-NAM2             
+013200	                 MOVE 0                TO EMLENT-DEPARTMENT       
+013300	                 MOVE 0                TO EMLENT-SALARY           
+013400	                 MOVE SPACES           TO EMLENT-DESIGNATION      
+013500	      *---------------------------------------------------------  
+013600	      *  TEST-06 : Lecture unique L0001 avec EMPID valide         
+013700	      *            Resultat attendu : CodRetPmr = '0000'          
+013800	      *            + donnees employe dans EMLSOR-L0001            
+013900	      *---------------------------------------------------------  
+014000	             WHEN '06'                                          
+014100	                 MOVE 'Test-06 : L0001 lecture employe 1001'    
+014200	                                        TO WS-MSG-TEST          
+014300	                 MOVE 'L0001'          TO FCIFAL-SceDmd-Fct     
+014400	                 SET  FCIFAL-TYPACN-UNQ TO TRUE                 
+014500	                 MOVE 1001             TO EMLENT-EMPID          
+014600	                                                                
+014700	      *---------------------------------------------------------
+014800	      *  TEST-07 : Creation employe I0001                       
+014900	      *            Resultat attendu : CodRetPmr = '0000'        
+015000	      *            + employe cree en base                       
+015100	      *---------------------------------------------------------
+015200	             WHEN '07'                                          
+015300	                 MOVE 'Test-07 : I0001 creation employe'        
+015400	                                        TO WS-MSG-TEST          
+015500	                 MOVE 'I0001'          TO FCIFAL-SceDmd-Fct     
+015600	                 SET  FCIFAL-TYPACN-ISR TO TRUE                 
+015700	                 MOVE 1021             TO EMLENT-EMPID          
+015800	                 MOVE 'NOM021'         TO EMLENT-NAME           
+015900	                 MOVE 'PRENOM21'       TO EMLENT-NAM2           
+016000	                 MOVE 69               TO EMLENT-DEPARTMENT        
+016100	                 MOVE 37000            TO EMLENT-SALARY            
+016200	                 MOVE 'ARC'            TO EMLENT-DESIGNATION       
+016300	                                                                   
+016400	      *---------------------------------------------------------   
+016500	      *  TEST-08 : MAJ employe M0001                               
+016600	      *            Resultat attendu : CodRetPmr = '0000'           
+016700	      *            + employe mis a jour en base                    
+016800	      *---------------------------------------------------------   
+016900	             WHEN '08'                                             
+017000	                 MOVE 'Test-08 : M0001 MAJ employe 9001'           
+017100	                                        TO WS-MSG-TEST             
+017200	                 MOVE 'M0001'          TO FCIFAL-SceDmd-Fct        
+017300	                 SET  FCIFAL-TYPACN-MOD TO TRUE                    
+017400	                 MOVE 9001             TO EMLENT-EMPID             
+017500	                 MOVE 'DUPONT'         TO EMLENT-NAME              
+017600	                 MOVE 'PIERRE'         TO EMLENT-NAM2              
+017700	                 MOVE 20               TO EMLENT-DEPARTMENT        
+017800	                 MOVE 55000            TO EMLENT-SALARY            
+017900	                 MOVE 'ARC'            TO EMLENT-DESIGNATION       
+018000	                                                                   
+018100	      *---------------------------------------------------------   
+018200	      *  TEST-09 : Liste premiere page 10 employes L1001           
+018300	      *            Resultat attendu : CodRetPmr = '0000'           
+018400	      *            + 10 employes dans EMLSOR-L1001                 
+018500	      *---------------------------------------------------------   
+018600	             WHEN '09'                                             
+018700	                 MOVE 'Test-09 : L1001 premiere page'              
+018800	                                        TO WS-MSG-TEST             
+018900	                 MOVE 'L1001'           TO FCIFAL-SceDmd-Fct       
+019000	                 SET  FCIFAL-TYPACN-INI TO TRUE                    
+019010	                 MOVE 0                 TO EMLENT-EMPID            
+019100	                                                                   
+019200	      *---------------------------------------------------------   
+019300	      *  TEST-10 : Liste page suivante 10 employes L1001           
+019400	      *            Resultat attendu : CodRetPmr = '0000'           
+019500	      *            + 10 employes dans EMLSOR-L1001                 
+019600	      *---------------------------------------------------------   
+019700	             WHEN '10'                                             
+019800	                 MOVE 'Test-10 : L1001 page suivante'              
+019900	                                        TO WS-MSG-TEST                
+020000	                 MOVE 'L1001'          TO FCIFAL-SceDmd-Fct           
+020100	                 SET  FCIFAL-TYPACN-LECSUI TO TRUE                    
+020110	                 MOVE 1010              TO EMLENT-EMPID               
+020200	                                                                      
+020300	      *---------------------------------------------------------      
+020400	      *  TEST-11 : Liste derniere page 10 employes L1001              
+020500	      *            Resultat attendu : CodRetPmr = '0000'              
+020600	      *            + IndFinLis = 1 dans YFCIFRE                       
+020700	      *---------------------------------------------------------      
+020800	             WHEN '11'                                                
+020900	                 MOVE 'Test-11 : L1001 derniere page'                 
+021000	                                        TO WS-MSG-TEST                
+021100	                 MOVE 'L1001'          TO FCIFAL-SceDmd-Fct           
+021200	                 SET FCIFAL-TypAcn-LecPcd TO TRUE                     
+021210	                 MOVE 1020              TO EMLENT-EMPID               
+021300	                                                                      
+021400	      *---------------------------------------------------------      
+021500	      *  TEST-12 : Liste complete 10 employes L1001 (lecture blo      
+021600	      *            Resultat attendu : CodRetPmr = '0000'              
+021700	      *            + NbrLigRet dans YFCIFRE                             
+021800	      *---------------------------------------------------------        
+021900	             WHEN '12'                                                  
+022000	                 MOVE 'Test-12 : L1001 lecture bloc unique 10'          
+022100	                                        TO WS-MSG-TEST                  
+022200	                 MOVE 'L1001'          TO FCIFAL-SceDmd-Fct             
+022300	                 SET  FCIFAL-TYPACN-LECBLCUNQ TO TRUE                   
+022400	                                                                        
+022600	             WHEN OTHER                                                 
+022700	                 DISPLAY "ERREUR : NUMERO DE TEST INCONNU [" WS-NUM-TEST
+022800	                         "]"                                            
+022900	                 DISPLAY 'TESTS DISPONIBLES : 01 A 12'                  
+023000	                 GOBACK                                                 
+023100	           END-EVALUATE                                                 
+023200	                                                                        
+023300	      *=========================================================        
+023400	      *  APPEL DU SOUS-PROGRAMME                                        
+023500	      *=========================================================        
+023600	           DISPLAY '----------------------------------------'           
+023700	           DISPLAY 'DESCRIPTION : ' WS-MSG-TEST                         
+023800	           DISPLAY 'DEBUT APPEL ==> ' C-SUBPGM                    
+023900	           DISPLAY '----------------------------------------'     
+024000	                                                                  
+024100	           CALL C-SUBPGM USING YFCIFAL                            
+024200	                               YFCIFRE                            
+024300	                               YEMLENT                            
+024400	                               YEMLSOR                            
+024500	                                                                  
+024600	      *=========================================================  
+024700	      *  AFFICHAGE DES RESULTATS                                  
+024800	      *=========================================================  
+024900	           DISPLAY '----------------------------------------'     
+025000	           DISPLAY 'FIN APPEL ==> ' C-SUBPGM                      
+025100	           DISPLAY '========================================'     
+025200	           DISPLAY "RESULTATS DU TEST [" WS-NUM-TEST "]"          
+025300	           DISPLAY '========================================'     
+025400	                                                                  
+025500	      *  -- Partie fixe retour                                    
+025600	           DISPLAY "YFCIFRE <" YFCIFRE ">"                        
+025700	                                                                  
+025800	      *  -- Code retour primaire                                 
+025900	           DISPLAY "CodRetPmr  : [" FCIFRE-CODRETPMR "]"         
+026000	                                                                 
+026100	      *  -- Code retour secondaire                               
+026200	           DISPLAY "CodRetScd : [" FCIFRE-CodRetScd "]"          
+026300	                                                                 
+026400	      *  -- Indicateur fin de liste                              
+026500	           DISPLAY "IndFinLis  : [" FCIFRE-INDFINLIS "]"         
+026600	                                                                 
+026700	      *  -- Nombre de lignes retournees                          
+026800	           DISPLAY "NbrLigRet  : [" FCIFRE-NBRLIGRET "]"         
+026900	                                                                 
+027000	      *  -- Message erreur si present                            
+027100	           DISPLAY "MsgErrMet  : [" FCIFRE-MSGERRMET "]"         
+027200	                                                                 
+027300	      *  -- Partie variable sortie selon le test                 
+027400	           EVALUATE WS-NUM-TEST                                  
+027500	                                                                 
+027600	             WHEN '06'                                           
+027700	                 DISPLAY '--- EMLSOR-L0001 ---'                  
+027800	                 DISPLAY 'EMPID       : [' EMLSOR-L0001-EMPID ']'      
+027900	                 DISPLAY 'NAME        : [' EMLSOR-L0001-NAME ']'       
+028000	                 DISPLAY 'NAM2        : [' EMLSOR-L0001-NAM2 ']'       
+028100	                 DISPLAY 'DEPARTMENT  : [' EMLSOR-L0001-DEPARTMENT ']' 
+028200	                 DISPLAY 'SALARY      : [' EMLSOR-L0001-SALARY         
+028300	                 DISPLAY 'DESIGNATION : [' EMLSOR-L0001-DESIGNATION ']'
+028400	                                                                       
+028500	             WHEN '09' THRU '12'                                       
+028600	                 DISPLAY "--- EMLSOR-L1001 (" FCIFRE-NBRLIGRET         
+028700	                         " lignes) ---"                                
+028800	                 PERFORM VARYING WS-IDX FROM 1 BY 1                    
+028900	                     UNTIL WS-IDX > FCIFRE-NBRLIGRET                   
+029000	                       OR  WS-IDX > 10                                 
+029100	                     DISPLAY 'LIGNE [' WS-IDX '] EMPID=['              
+029200	                             EMLSOR-L1001-EMPID(WS-IDX)                
+029300	                             '] NAME=['                                
+029400	                             EMLSOR-L1001-NAME(WS-IDX)                 
+029500	                             '] NAM2=['                                
+029600	                             EMLSOR-L1001-NAM2(WS-IDX)                 
+029700	                             '] DEPT=['                                
+029800	                             EMLSOR-L1001-DEPARTMENT(WS-IDX)         
+029900	                             '] DESIG=['                             
+030000	                             EMLSOR-L1001-DESIGNATION(WS-IDX)        
+030100	                             ']'                                     
+030200	                 END-PERFORM                                         
+030300	                                                                     
+030400	             WHEN OTHER                                              
+030500	                 DISPLAY 'YEMLSOR (62 premiers) <'                   
+030600	                         YEMLSOR(1:62) '>'                           
+030700	                                                                     
+030800	           END-EVALUATE                                              
+030900	                                                                     
+031000	           DISPLAY '========================================'        
+031100	           DISPLAY 'FIN TEST [' WS-NUM-TEST ']'                      
+031200	           DISPLAY '========================================'        
+031300	           GOBACK.                                                   
+                                
+                             
+                           

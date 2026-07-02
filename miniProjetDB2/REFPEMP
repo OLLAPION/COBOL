@@ -1,0 +1,24 @@
+ci-dessous que les modifications que j'ai effectuées
+
+027100	      *        MOVE WS-EMPLOYES TO EMPSOR-EMPLOYES-SORTIE   
+027110	               MOVE WS-EMPID       TO EMPSOR-EMPID          
+027120	               MOVE WS-EMPNAME     TO EMPSOR-NAME           
+027130	               MOVE WS-EMPNAM2     TO EMPSOR-NAM2           
+027140	               MOVE WS-DEPARTMENT  TO EMPSOR-DEPARTMENT     
+027150	               MOVE WS-SALARY      TO EMPSOR-SALARY         
+027160	               MOVE WS-DESIGNATION TO EMPSOR-DESIGNATION    
+027200	           DISPLAY '<Step 08>'                              
+027300	           END-IF                                           
+027400	           DISPLAY 'Fin   <'C-NomPgm'>'        
+...
+029500	             FROM TREFEMP           
+029600	             WHERE EMPID = :WS-EMPID
+029700	           END-EXEC                 
+...   
+035700	      *    END-IF                         
+035800	           IF SQLCODE = ZERO              
+035810	              ADD 1 TO FCIFRE-NBRLIGRET   
+035820	           END-IF                         
+035830	           .                              
+035900	      *===================================
+036000	       TRT-FCT-L1001-FIN.                                               

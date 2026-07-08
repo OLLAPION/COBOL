@@ -1,66 +1,68 @@
-       IDENTIFICATION DIVISION.              
-       PROGRAM-ID. REFLCPT.                  
-       DATA DIVISION.                        
-       WORKING-STORAGE SECTION.              
-       01 WS-FOUND            PIC 9 VALUE 0. 
-         88 COMPTE-TROUVE    VALUE 1.        
-         88 COMPTE-PAS-TROUVE VALUE 0.       
-       01 WS-PHYS-STATUS      PIC XX.        
-       LINKAGE SECTION.                      
-       01 WS-OPERATION        PIC X(10).     
-       01 WS-NUMERO-COMPTE    PIC X(6).      
-       01 WS-COMPTE-LOGIQUE.                 
-          05 WS-ID-COMPTE     PIC X(6).      
-          05 WS-NOM           PIC X(15).     
-          05 WS-SOLDE         PIC 9(08).     
-          05 WS-REGION        PIC X(10).     
-          05 WS-SOLDE-MOYEN   PIC 9(08).     
-          05 FILLER           PIC X(33).     
-       01 WS-STATUS           PIC XX.        
-       PROCEDURE DIVISION USING              
-           BY REFERENCE WS-OPERATION         
-           BY REFERENCE WS-NUMERO-COMPTE     
-           BY REFERENCE WS-COMPTE-LOGIQUE    
-           BY REFERENCE WS-STATUS.           
-       DEBUT.                                
-           MOVE '00' TO WS-STATUS            
-           EVALUATE WS-OPERATION             
-              WHEN 'READ'                    
-                 PERFORM READ-COMPTE         
-              WHEN 'WRITE'                   
-                 PERFORM WRITE-COMPTE        
-              WHEN 'REWRITE'                 
-                 PERFORM UPDATE-COMPTE       
-              WHEN 'DELETE'                  
-                 PERFORM DELETE-COMPTE       
-              WHEN OTHER                     
-              MOVE '99' TO WS-STATUS         
-           END-EVALUATE                      
-           GOBACK.                           
-       READ-COMPTE.                                                
-           CALL 'REFPCPT' USING BY CONTENT 'READ'                  
+       IDENTIFICATION DIVISION.               
+       PROGRAM-ID. REFLCPT.                   
+       DATA DIVISION.                         
+       WORKING-STORAGE SECTION.               
+       01 WS-FOUND            PIC 9 VALUE 0.  
+         88 COMPTE-TROUVE    VALUE 1.         
+         88 COMPTE-PAS-TROUVE VALUE 0.        
+       01 WS-PHYS-STATUS      PIC XX.         
+       LINKAGE SECTION.                       
+       01 WS-OPERATION        PIC X(10).      
+       01 WS-NUMERO-COMPTE    PIC X(6).       
+       01 WS-COMPTE-LOGIQUE.                  
+          05 WS-ID-COMPTE     PIC X(6).       
+          05 WS-NOM           PIC X(15).      
+          05 WS-SOLDE         PIC 9(08).      
+          05 WS-REGION        PIC X(10).      
+          05 WS-SOLDE-MOYEN   PIC 9(08).      
+          05 FILLER           PIC X(33).      
+       01 WS-STATUS           PIC XX.         
+       PROCEDURE DIVISION USING               
+           BY REFERENCE WS-OPERATION                    
+           BY REFERENCE WS-NUMERO-COMPTE                
+           BY REFERENCE WS-COMPTE-LOGIQUE               
+           BY REFERENCE WS-STATUS.                      
+       DEBUT.                                           
+           MOVE '00' TO WS-STATUS                       
+           EVALUATE WS-OPERATION                        
+              WHEN 'READ'                               
+                 PERFORM READ-COMPTE                    
+              WHEN 'WRITE'                              
+                 PERFORM WRITE-COMPTE                   
+              WHEN 'REWRITE'                            
+                 PERFORM UPDATE-COMPTE                  
+              WHEN 'DELETE'                             
+                 PERFORM DELETE-COMPTE                  
+              WHEN OTHER                                
+              MOVE '99' TO WS-STATUS                    
+           END-EVALUATE                                 
+           GOBACK.                                      
+       READ-COMPTE.                                     
+           CALL 'REFPCPT' USING BY REFERENCE WS-OPERATION          
                                 BY REFERENCE WS-NUMERO-COMPTE      
                                 BY REFERENCE WS-COMPTE-LOGIQUE     
                                 BY REFERENCE WS-PHYS-STATUS.       
+           DISPLAY 'DEBUG LOGIQUE - ID  : ' WS-ID-COMPTE           
+           DISPLAY 'DEBUG LOGIQUE - NOM : ' WS-NOM                 
            IF WS-PHYS-STATUS NOT = '00'                            
-              MOVE WS-PHYS-STATUS TO WS-STATUS                                                                   
+              MOVE WS-PHYS-STATUS TO WS-STATUS                     
            END-IF                                                  
               MOVE '00' TO WS-STATUS.                              
        WRITE-COMPTE.                                               
-           CALL 'REFPCPT' USING BY CONTENT 'WRITE'                 
+           CALL 'REFPCPT' USING BY REFERENCE WS-OPERATION          
                                 BY REFERENCE WS-NUMERO-COMPTE      
                                 BY REFERENCE WS-COMPTE-LOGIQUE     
                                 BY REFERENCE WS-PHYS-STATUS.       
            MOVE WS-PHYS-STATUS TO WS-STATUS.                       
        UPDATE-COMPTE.                                              
-           CALL 'REFPCPT' USING BY CONTENT 'REWRITE'               
+           CALL 'REFPCPT' USING BY REFERENCE WS-OPERATION          
                                 BY REFERENCE WS-NUMERO-COMPTE      
                                 BY REFERENCE WS-COMPTE-LOGIQUE     
-                                BY REFERENCE WS-PHYS-STATUS.   
-           MOVE WS-PHYS-STATUS TO WS-STATUS.                   
-       DELETE-COMPTE.                                          
-           CALL 'REFPCPT' USING BY CONTENT 'DELETE'            
-                                BY REFERENCE WS-NUMERO-COMPTE  
-                                BY REFERENCE WS-COMPTE-LOGIQUE 
-                                BY REFERENCE WS-PHYS-STATUS.   
-           MOVE WS-PHYS-STATUS TO WS-STATUS.                   
+                                BY REFERENCE WS-PHYS-STATUS.     
+           MOVE WS-PHYS-STATUS TO WS-STATUS.                     
+       DELETE-COMPTE.                                            
+           CALL 'REFPCPT' USING BY REFERENCE WS-OPERATION        
+                                BY REFERENCE WS-NUMERO-COMPTE    
+                                BY REFERENCE WS-COMPTE-LOGIQUE   
+                                BY REFERENCE WS-PHYS-STATUS.     
+           MOVE WS-PHYS-STATUS TO WS-STATUS.                     

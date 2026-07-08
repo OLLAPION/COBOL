@@ -1,0 +1,33 @@
+IDENTIFICATION DIVISION.               
+PROGRAM-ID. REFTEST.                   
+DATA DIVISION.                         
+WORKING-STORAGE SECTION.               
+01 WS-OPERATION        PIC X(10).      
+01 WS-NUMERO-COMPTE    PIC X(6).       
+01 WS-COMPTE-LOGIQUE.                  
+   05 WS-ID-COMPTE        PIC X(6).    
+   05 WS-NOM              PIC X(15).   
+   05 WS-SOLDE            PIC 9(08).   
+   05 WS-REGION           PIC X(10).   
+   05 WS-SOLDE-MOYEN      PIC 9(08).   
+   05 FILLER              PIC X(33).   
+01 WS-STATUS           PIC XX.         
+                                       
+PROCEDURE DIVISION.                    
+DEBUT.                                 
+    MOVE 'READ' TO WS-OPERATION        
+    MOVE '000001' TO WS-NUMERO-COMPTE  
+                                         
+CALL 'REFLCPT' USING WS-OPERATION        
+                     WS-NUMERO-COMPTE    
+                     WS-COMPTE-LOGIQUE   
+                     WS-STATUS           
+                                         
+DISPLAY 'STATUS RETOUR : ' WS-STATUS     
+DISPLAY 'ID COMPTE     : ' WS-ID-COMPTE  
+DISPLAY 'NOM           : ' WS-NOM        
+DISPLAY 'SOLDE         : ' WS-SOLDE      
+DISPLAY 'REGION        : ' WS-REGION     
+DISPLAY 'SOLDE MOYEN   : ' WS-SOLDE-MOYEN
+                                         
+GOBACK.                                  

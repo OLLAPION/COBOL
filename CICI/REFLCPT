@@ -43,8 +43,7 @@
                                 BY REFERENCE WS-COMPTE-LOGIQUE     
                                 BY REFERENCE WS-PHYS-STATUS.       
            IF WS-PHYS-STATUS NOT = '00'                            
-              MOVE WS-PHYS-STATUS TO WS-STATUS                     
-              EXIT                                                 
+              MOVE WS-PHYS-STATUS TO WS-STATUS                                                                   
            END-IF                                                  
               MOVE '00' TO WS-STATUS.                              
        WRITE-COMPTE.                                               

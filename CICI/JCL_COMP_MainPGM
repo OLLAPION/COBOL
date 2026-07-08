@@ -1,0 +1,11 @@
+//COMPPGM JOB COMPIL,'COMPPGM',MSGLEVEL=(1,1),REGION=4M,                
+//            MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                         
+//*-------------------------------------------------------------------* 
+//* COMPILATEUR DE PGM COBOL                                          * 
+//*-------------------------------------------------------------------* 
+//COMPIL   EXEC IGYWCL                                                  
+//COBOL.SYSIN  DD DSN=PALLO.FINANCE.SOURCE(REFTEST),DISP=SHR            
+//LKED.SYSLMOD DD DSN=PALLO.FINANCE.LOAD(REFTEST),DISP=SHR              
+//LKED.SYSLIB  DD DSN=PALLO.FINANCE.LOAD,DISP=SHR                       
+/*                                                                      
+//                                                                      

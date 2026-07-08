@@ -1,0 +1,131 @@
+       IDENTIFICATION DIVISION.                    
+       PROGRAM-ID. REFPCPT.                        
+       ENVIRONMENT DIVISION.                       
+       CONFIGURATION SECTION.                      
+       SOURCE-COMPUTER. IBM-ZOS.                   
+       OBJECT-COMPUTER. IBM-ZOS.                   
+       INPUT-OUTPUT SECTION.                       
+       FILE-CONTROL.                               
+           SELECT FILECPT ASSIGN TO COMPTE         
+              ORGANIZATION IS INDEXED              
+              ACCESS MODE IS RANDOM                
+              RECORD KEY IS ID-COMPTE              
+              ALTERNATE RECORD KEY IS NOM-COMPTE   
+                 WITH DUPLICATES                   
+              FILE STATUS IS WS-FILE-STATUS.       
+       DATA DIVISION.                              
+       FILE SECTION.                               
+       FD  FILECPT.                                
+       01  COMPTE-ENREGISTREMENT.                  
+           05 ID-COMPTE            PIC X(6).       
+           05 NOM-COMPTE           PIC X(15).      
+           05 SOLDE-COMPTE         PIC 9(08).      
+           05 REGION-COMPTE        PIC X(10).      
+           05 SOLDE-MOYEN          PIC 9(08).      
+           05 FILLER               PIC X(33).      
+       WORKING-STORAGE SECTION.                    
+       01 WS-FILE-STATUS       PIC XX.             
+       01 WS-FLAG-FOUND        PIC 9 VALUE 0.      
+          88 COMPTE-TROUVE     VALUE 1.            
+          88 COMPTE-PAS-TROUVE VALUE 0.            
+       01 WS-STATUS-PHYS       PIC XX.             
+       01 WS-MESSAGE-ERROR     PIC X(50).          
+       LINKAGE SECTION.                            
+       01 LS-OPERATION         PIC X(10).          
+       01 LS-NUMERO-COMPTE     PIC X(6).           
+       01 LS-COMPTE-BUFFER.                        
+          05 LS-ID-COMPTE      PIC X(6).           
+          05 LS-NOM            PIC X(15).          
+          05 LS-SOLDE          PIC 9(08).          
+          05 LS-REGION         PIC X(10).           
+          05 LS-SOLDE-MOYEN    PIC 9(08).           
+          05 FILLER            PIC X(33).           
+       01 LS-STATUS-RET        PIC XX.              
+       PROCEDURE DIVISION USING                     
+           BY REFERENCE LS-OPERATION                
+           BY REFERENCE LS-NUMERO-COMPTE            
+           BY REFERENCE LS-COMPTE-BUFFER            
+           BY REFERENCE LS-STATUS-RET.              
+       DEBUT.                                       
+           EVALUATE LS-OPERATION                    
+              WHEN 'READ'                           
+                 PERFORM OP-READ-COMPTE             
+              WHEN 'WRITE'                          
+                 PERFORM OP-WRITE-COMPTE            
+              WHEN 'REWRITE'                        
+                 PERFORM OP-REWRITE-COMPTE          
+              WHEN 'DELETE'                         
+                 PERFORM OP-DELETE-COMPTE           
+              WHEN OTHER                            
+                 MOVE '99' TO WS-STATUS-PHYS                      
+                 MOVE 'OPERATION INVALIDE' TO WS-MESSAGE-ERROR    
+           END-EVALUATE.                                          
+           MOVE WS-STATUS-PHYS TO LS-STATUS-RET                   
+           GOBACK.                                                
+       OP-READ-COMPTE.                                            
+           OPEN INPUT FILECPT.                                    
+           IF WS-FILE-STATUS NOT = '00'                           
+              MOVE '10' TO WS-STATUS-PHYS                         
+              MOVE 'ERREUR OUVERTURE FICHIER' TO WS-MESSAGE-ERROR 
+           ELSE                                                   
+              MOVE LS-NUMERO-COMPTE TO ID-COMPTE                  
+              READ FILECPT                                        
+                 INVALID KEY                                      
+                   SET COMPTE-PAS-TROUVE TO TRUE                  
+                   MOVE '23' TO WS-STATUS-PHYS                    
+                   MOVE 'COMPTE NON TROUVE' TO WS-MESSAGE-ERROR   
+                 NOT INVALID KEY                                  
+                   SET COMPTE-TROUVE TO TRUE                      
+                   MOVE COMPTE-ENREGISTREMENT TO LS-COMPTE-BUFFER 
+                   MOVE '00' TO WS-STATUS-PHYS                       
+              END-READ                                               
+              CLOSE FILECPT                                          
+           END-IF.                                                   
+       OP-WRITE-COMPTE.                                              
+           OPEN I-O FILECPT.                                         
+           IF WS-FILE-STATUS NOT = '00'                              
+              MOVE '10' TO WS-STATUS-PHYS                            
+              MOVE 'ERREUR OUVERTURE FICHIER' TO WS-MESSAGE-ERROR    
+           ELSE                                                      
+           MOVE LS-COMPTE-BUFFER TO COMPTE-ENREGISTREMENT            
+           WRITE COMPTE-ENREGISTREMENT                               
+               INVALID KEY                                           
+                   MOVE '22' TO WS-STATUS-PHYS                       
+                   MOVE 'COMPTE DEJA EXISTANT' TO WS-MESSAGE-ERROR   
+               NOT INVALID KEY                                       
+                   MOVE '00' TO WS-STATUS-PHYS                       
+           END-WRITE                                                 
+           CLOSE FILECPT                                             
+           END-IF.                                                   
+       OP-REWRITE-COMPTE.                                          
+           OPEN I-O FILECPT.                                       
+           IF WS-FILE-STATUS NOT = '00'                            
+              MOVE '10' TO WS-STATUS-PHYS                          
+              MOVE 'ERREUR OUVERTURE FICHIER' TO WS-MESSAGE-ERROR  
+           ELSE                                                    
+           MOVE LS-COMPTE-BUFFER TO COMPTE-ENREGISTREMENT          
+           REWRITE COMPTE-ENREGISTREMENT                           
+               INVALID KEY                                         
+                   MOVE '23' TO WS-STATUS-PHYS                     
+                   MOVE 'COMPTE NON TROUVE' TO WS-MESSAGE-ERROR    
+               NOT INVALID KEY                                     
+                   MOVE '00' TO WS-STATUS-PHYS                     
+           END-REWRITE                                             
+           CLOSE FILECPT                                           
+           END-IF.                                                 
+       OP-DELETE-COMPTE.                                           
+           OPEN I-O FILECPT.                                       
+           IF WS-FILE-STATUS NOT = '00'                            
+              MOVE '10' TO WS-STATUS-PHYS                          
+              MOVE 'ERREUR OUVERTURE FICHIER' TO WS-MESSAGE-ERROR  
+           ELSE                                                    
+           MOVE LS-NUMERO-COMPTE TO ID-COMPTE                      
+           DELETE FILECPT                                          
+               INVALID KEY                                         
+                   MOVE '23' TO WS-STATUS-PHYS                     
+                   MOVE 'COMPTE NON TROUVE' TO WS-MESSAGE-ERROR    
+               NOT INVALID KEY                                     
+                   MOVE '00' TO WS-STATUS-PHYS                     
+           END-DELETE                                              
+           CLOSE FILECPT                                           
+           END-IF.                                                 

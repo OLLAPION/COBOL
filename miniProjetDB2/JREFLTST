@@ -1,0 +1,67 @@
+//IBMUSERW  JOB (ACCOUNT),GIE,MSGCLASS=X,CLASS=A,NOTIFY=&SYSUID      
+//*                                                                  
+//JOBLIB  DD  DISP=SHR,DSN=DSNA10.SDSNLOAD                           
+//        DD  DISP=SHR,DSN=CEE.SCEERUN                               
+//        DD  DISP=SHR,DSN=IGY420.SIGYCOMP                           
+//*                                                                  
+//COMPDB2  EXEC DSNHICOB,                                            
+//         COND=(4,LT),                                              
+//         PARM.PC=('HOST(IBMCOB)',APOST,APOSTSQL,SOURCE,            
+//         NOXREF,'SQL(DB2)','DEC(31)'),                             
+//         PARM.COB=(LIB,NOSEQUENCE,QUOTE,RENT,'PGMNAME(LONGUPPER)'),
+//         PARM.LKED='LIST,XREF,MAP,RENT'                            
+//*                                                                  
+//PC.SRCLIB  DD DSN=DSNA10.DBAG.SRCLIB.DATA(REFLTST),DISP=SHR        
+//PC.DBRMLIB   DD DSN=DSNA10.DBAG.DBRMLIB.DATA(REFLTST),DISP=SHR     
+//*                                                                  
+//PC.SYSLIB  DD DISP=SHR,DSN=CEE.SCEELKED                            
+//           DD DISP=SHR,DSN=DSNA10.SDSNLOAD                         
+//           DD DISP=SHR,DSN=DFH510.CICS.SDFHLOAD                    
+//           DD DISP=SHR,DSN=GDDM.SADMMOD                              
+//           DD DISP=SHR,DSN=DSNA10.DBAG.RUNLIB.LOAD                   
+//COB.SYSLIB DD DISP=SHR,DSN=FTEST.DB2.SOURCE                          
+//*                                                                    
+//PC.SYSIN   DD DSN=FTEST.DB2.SOURCE(REFLTST),DISP=SHR                 
+//*                                                                    
+//LKED.SYSLMOD DD DSN=DSNA10.DBAG.RUNLIB.LOAD(REFLTST),DISP=SHR        
+//*********************************************************************
+//** PHASE 3 BIND PLAN SI TOUT SE PASSE BIEN                           
+//*********************************************************************
+// IF RC LE 4 THEN                                                     
+//RUN      EXEC PGM=IKJEFT01                                           
+//SYSOUT   DD SYSOUT=*                                                 
+//STEPLIB  DD DISP=SHR,DSN=DSNA10.DBAG.SDSNEXIT                        
+//         DD DISP=SHR,DSN=DSNA10.SDSNLOAD                             
+//         DD DISP=SHR,DSN=DSNA10.DBAG.RUNLIB.LOAD                     
+//         DD DISP=SHR,DSN=DSNA10.DBAG.DBRMLIB.DATA                    
+//SYSUDUMP DD SYSOUT=*                                                 
+//SYSPRINT DD SYSOUT=*                                                 
+//SYSTSPRT DD SYSOUT=*                                                 
+//*-----------------------------------------------------------------*  
+//*  SYSIN : NUMERO DU TEST A EXECUTER (01 A 12)                    *  
+//*                                                                 *  
+//*  TEST-01 : CODE FONCTION INCORRECT         => CODRETPMR='0003'  *  
+//*  TEST-02 : L0001 SANS ARGUMENTS VARIABLES  => CODRETPMR='0004'  *  
+//*  TEST-03 : I0001 SANS ARGUMENTS VARIABLES  => CODRETPMR='0005'  *  
+//*  TEST-04 : I0001 ARG OBLIGATOIRE VIDE      => CODRETPMR='0005'  *  
+//*  TEST-05 : M0001 ARG OBLIGATOIRE VIDE      => CODRETPMR='0005'  *  
+//*  TEST-06 : L0001 LECTURE EMPLOYE 1001      => CODRETPMR='0000'  *  
+//*  TEST-07 : I0001 CREATION EMPLOYE 9001     => CODRETPMR='0000'  *  
+//*  TEST-08 : M0001 MAJ EMPLOYE 9001          => CODRETPMR='0000'  *  
+//*  TEST-09 : L1001 PREMIERE PAGE (LEI)       => CODRETPMR='0000'  *  
+//*  TEST-10 : L1001 PAGE SUIVANTE (LES)       => CODRETPMR='0000'  *  
+//*  TEST-11 : L1001 DERNIERE PAGE (LEP)       => CODRETPMR='0000'  *  
+//*  TEST-12 : L1001 LECTURE BLOC UNIQUE (LBU) => CODRETPMR='0000'  *  
+//*-----------------------------------------------------------------*  
+//SYSTSIN  DD *                                                        
+ DSN SYSTEM(DBAG)                                                      
+ RUN PROGRAM(REFLTST) PLAN(PLAN8)                                      
+ END                                                                   
+//*                                                      
+//*  --> MODIFIER LA VALEUR CI-DESSOUS POUR CIBLER LE    
+//*                                                      
+//SYSIN    DD *                                          
+11                                                       
+/*                                                       
+// ENDIF                                                 
+/*                                                       

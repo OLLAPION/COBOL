@@ -1,0 +1,4 @@
+ASSBLMAP : JCL assembleur de la MAP
+COMPPRG : JCL de compilation du programme COBOL
+MAPTEST : la map
+PROGTEST : Programme COBOL(fait un simple SEND)

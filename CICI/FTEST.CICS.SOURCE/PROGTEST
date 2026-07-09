@@ -1,0 +1,18 @@
+        IDENTIFICATION DIVISION.               
+        PROGRAM-ID. PROGTEST.                  
+        ENVIRONMENT DIVISION.                  
+        DATA DIVISION.                         
+        FILE SECTION.                          
+        WORKING-STORAGE SECTION.               
+        COPY MAPTEST.                          
+        LINKAGE SECTION.                       
+        PROCEDURE DIVISION.                    
+        MAIN-PARA.                             
+            EXEC CICS SEND MAP('MAP1')         
+                      MAPSET('MAPTEST')        
+                      MAPONLY                  
+                      ERASE                    
+            END-EXEC.                          
+            EXEC CICS                          
+                      RETURN                   
+            END-EXEC.                          

@@ -1,0 +1,8 @@
+Travaux pratiques : TSI et architecture Multi-couches
+
+Thème : Développement des transactions de manipulations des données selon
+l’architecture multi-couches.
+
+Intérêt du travail : Développer les interfaces nécessaires pour la lecture, écriture,
+mise à jour et suppression des enregistrements dans un Data Set VSAM, pour les deux
+couches Traitement ou Métier et Physique ou Données. 

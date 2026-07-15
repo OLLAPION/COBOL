@@ -1,0 +1,38 @@
+//CREACLI  JOB (CREACLI),'CREACLI',MSGLEVEL=(1,1),REGION=4M,           
+//             MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                       
+//*-------------------------------------------------------------------*
+//* CREATION ET CHARGEMENT DU FICHIER PS CLIENT VIA IDCAMS           * 
+//*-------------------------------------------------------------------*
+//STEP1    EXEC PGM=IDCAMS                                             
+//SYSPRINT DD SYSOUT=*                                                 
+//OUTCLI   DD DSN=PALLO.CICS.CLIENT,                                   
+//            DISP=(NEW,CATLG,DELETE),                                 
+//            SPACE=(TRK,(1,1)),                                       
+//            DCB=(RECFM=FB,LRECL=80,BLKSIZE=800),                     
+//            UNIT=SYSDA,VOL=SER=FDDBAS                                
+//INPCLI   DD *                                                        
+0000010120PLAYE     YVAN      19850412M05CPARIS     0000025000CR       
+0000020225MARQUEZ   MARINA    19781123F15MMARSEILLE 0000004500CR       
+0000030325BELLOT    PAUL      19920105M25DLYON      0000012850CR       
+0000040425AOUADI    SARRA     19600630F05VLILLE     0000075000CR       
+0000050120TLECANI   HICHEM    20000815M10CPARIS     0000004150CR       
+0000060225BOUC      MARINE    19890922F25MMARSEILLE 0000008900CR       
+0000070330IMOUSAINE LOQMANE   19740314M20DLYON      0000014200DB       
+0000080425GARCIA    MARIA     19951201F15MLILLE     0000031000CR 
+0000090135TLIG      MOHAMED   19550718M30VPARIS     0000054000CR 
+0000100220GARNIER   EMMA      20020228F05CMARSEILLE 0000012000CR 
+0000110325NICOLAS   ALEXIS    19681010M10MLYON      0000019500CR 
+0000120425ROUSSEAU  LUCIE     19910404F25DLILLE     0000002300CR 
+0000130130VIENNE    THEO      19830517M05MPARIS     0000011200CR 
+0000140225MULLER    EVA       19971108F15MMARSEILLE 0000006700CR 
+0000150325AERNOUTS  VIVIEN    19790325M25VLYON      0000048000CR 
+0000160425ALAOUI    NIHEL     19880812F20MLILLE     0000001200DB 
+0000170120ZEBANDITH STEVEN    19710602M15DPARIS     0000022000CR 
+0000180225FONTAINE  JULIE     19940120F25MMARSEILLE 0000003400DB 
+0000190330VINOT     MATHIEU   19650905M05MLYON      0000089800CR 
+0000200435HENRY     CLARA     20011030F30VLILLE     0000000500DB 
+/*                                                               
+//SYSIN    DD *                                                  
+  REPRO INFILE(INPCLI) OUTFILE(OUTCLI)                           
+/*                                                               
+//                                                               

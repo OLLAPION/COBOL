@@ -1,0 +1,32 @@
+//DEFKSDS  JOB (DEFKSDS),'DEFKSDS',MSGLEVEL=(1,1),REGION=4M,      
+//          MSGCLASS=A,CLASS=A,NOTIFY=&SYSUID                     
+//*==============================================================*
+//*    ->  DEFINITION KSDS + CHARGEMENT DU FICHIER CLIENT         
+//*==============================================================*
+//STEPKSDS EXEC PGM=IDCAMS                                        
+//SYSPRINT DD SYSOUT=*                                            
+//SYSIN    DD *                                                   
+    DELETE PALLO.CICS.CLIENT.KSDS CLUSTER PURGE                   
+    SET MAXCC = 0                                                 
+    DEFINE CLUSTER (NAME(PALLO.CICS.CLIENT.KSDS)  -               
+            TRACKS ( 1 1 )            -                           
+            VOL (FDDBAS)              -                           
+            CISZ ( 4096 )             -                           
+            RECORDSIZE (  80  80 )    -                           
+            SHAREOPTIONS ( 1 3 )      -                           
+            INDEXED                -                              
+            KEYS( 6 0 ) -                                         
+          NOREUSE ) -                                             
+    DATA (NAME(PALLO.CICS.CLIENT.KSDS.DATA)) -   
+    INDEX (NAME(PALLO.CICS.CLIENT.KSDS.INDEX))   
+/*                                               
+//LOADESDS EXEC PGM=IDCAMS                       
+//SYSPRINT DD SYSOUT=*                           
+//SYSIN DD *                                     
+    REPRO                             -          
+        INDATASET(PALLO.CICS.CLIENT)    -        
+        OUTDATASET(PALLO.CICS.CLIENT.KSDS)       
+    IF LASTCC=0 THEN                  -          
+    LISTCAT ALL LEVEL (PALLO.CICS.CLIENT.KSDS)   
+/*                                               
+//                                               

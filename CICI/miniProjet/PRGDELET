@@ -1,0 +1,128 @@
+     *================================================================*
+      IDENTIFICATION DIVISION.                                         
+      PROGRAM-ID. PRGDELET.                                            
+     *================================================================*
+     * PROGRAMME : PRGDELET                                          * 
+     * OBJET : SUPPRESSION D'UN ENREGISTREMENT CLIENT DANS LE         *
+     *         DATASET CLIENT (VSAM KSDS), EN PRECISANT LE CODE       *
+     *         CLIENT. CONTROLE D'EXISTENCE AVANT SUPPRESSION.        *
+     *================================================================*
+                                                                       
+      ENVIRONMENT DIVISION.                                            
+                                                                       
+      DATA DIVISION.                                                   
+      WORKING-STORAGE SECTION.                                         
+                                                                       
+     *----------------------------------------------------*            
+     * ZONE DE TRAVAIL - COUCHE PRESENTATION                           
+     *----------------------------------------------------*            
+      01  WS-NUM-COMPTE-A-SUPPR       PIC X(06).                       
+      01  WS-MSG-AFFICHAGE            PIC X(50).           
+      01  WS-MSG-ERREUR               PIC X(50).                      
+      01  WS-LENGTH                   PIC S9(4) COMP VALUE 80.        
+      01  WS-RESP                     PIC S9(8) COMP.                 
+                                                                      
+     *----------------------------------------------------*           
+     * ZONE DE TRAVAIL - COUCHE TRAITEMENT                            
+     *----------------------------------------------------*           
+      01  WS-CODE-RETOUR              PIC X(01).                      
+          88  TRAITEMENT-OK           VALUE 'O'.                      
+          88  TRAITEMENT-KO           VALUE 'N'.                      
+                                                                      
+     *----------------------------------------------------*           
+     * ZONE DE TRAVAIL - COUCHE PHYSIQUE / DONNEES                    
+     * ZONE POUR LE READ UPDATE PREALABLE (CONTROLE                   
+     * D'EXISTENCE, OBLIGATOIRE AVANT UN DELETE CIBLE)                
+     *----------------------------------------------------*           
+      01  WS-ENREG-CLIENT              PIC X(80).                     
+                                                                      
+      PROCEDURE DIVISION.                                             
+
+     *----------------------------------------------------*            
+     * PARAGRAPHE PRINCIPAL - ORCHESTRATION                            
+     *----------------------------------------------------*            
+      PARA-PRINCIPAL.                                                  
+          PERFORM PARA-INIT-DONNEE                                     
+          PERFORM PARA-CONTROLE-EXISTENCE                              
+          IF TRAITEMENT-OK                                             
+             PERFORM PARA-SUPPRESSION-CLIENT                           
+          END-IF                                                       
+          PERFORM PARA-AFFICHAGE-RESULTAT                              
+          EXEC CICS RETURN                                             
+          END-EXEC.                                                    
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE PRESENTATION : CODE CLIENT A SUPPRIMER,                  
+     * FIXE EN DUR DANS LE CORPS DU PROGRAMME                          
+     *----------------------------------------------------*            
+      PARA-INIT-DONNEE.                                                
+          MOVE '000021' TO WS-NUM-COMPTE-A-SUPPR.                      
+
+     *----------------------------------------------------*            
+     * COUCHE TRAITEMENT / METIER + PHYSIQUE                           
+     * CONTROLE D'EXISTENCE AVANT SUPPRESSION                          
+     * (READ UPDATE OBLIGATOIRE AVANT UN DELETE CIBLE                  
+     *  SUR LE DERNIER ENREGISTREMENT LU)                              
+     *----------------------------------------------------*            
+      PARA-CONTROLE-EXISTENCE.                                         
+          EXEC CICS READ                                               
+               FILE('CLIFI')                                           
+               INTO(WS-ENREG-CLIENT)                                   
+               LENGTH(WS-LENGTH)                                       
+               RIDFLD(WS-NUM-COMPTE-A-SUPPR)                           
+               UPDATE                                                  
+               RESP(WS-RESP)                                           
+          END-EXEC                                                     
+                                                                       
+          EVALUATE WS-RESP                                             
+             WHEN DFHRESP(NORMAL)                                      
+                SET TRAITEMENT-OK TO TRUE                              
+             WHEN DFHRESP(NOTFND)                                      
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR : CLIENT INEXISTANT, SUPPR IMPOSSIBLE'    
+                  TO WS-MSG-ERREUR                                     
+             WHEN OTHER                                                
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR TECHNIQUE CONTROLE EXISTENCE'             
+                  TO WS-MSG-ERREUR                                     
+          END-EVALUATE.                                                
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE PHYSIQUE / DONNEES : SUPPRESSION (DELETE)                
+     *----------------------------------------------------*            
+      PARA-SUPPRESSION-CLIENT.                                         
+          EXEC CICS DELETE                                             
+               FILE('CLIFI')                                           
+               RESP(WS-RESP)                                           
+          END-EXEC                                                     
+                                                                       
+          EVALUATE WS-RESP                                             
+             WHEN DFHRESP(NORMAL)                                      
+                SET TRAITEMENT-OK TO TRUE                            
+             WHEN OTHER                                              
+                SET TRAITEMENT-KO TO TRUE                            
+                MOVE 'ERREUR TECHNIQUE SUPPRESSION FICHIER'          
+                  TO WS-MSG-ERREUR                                   
+          END-EVALUATE.                                              
+                                                                     
+     *----------------------------------------------------*          
+     * COUCHE PRESENTATION : AFFICHAGE RESULTAT                      
+     *----------------------------------------------------*          
+      PARA-AFFICHAGE-RESULTAT.                                       
+          IF TRAITEMENT-OK                                           
+             MOVE 'CLIENT SUPPRIME : '   TO WS-MSG-AFFICHAGE         
+             MOVE WS-NUM-COMPTE-A-SUPPR  TO WS-MSG-AFFICHAGE(20:6)   
+             EXEC CICS SEND TEXT                                     
+                  FROM(WS-MSG-AFFICHAGE)                             
+                  LENGTH(50)                                         
+                  JUSLAST                                            
+                  FREEKB                                             
+             END-EXEC                                                
+          ELSE                           
+             EXEC CICS SEND TEXT         
+                  FROM(WS-MSG-ERREUR)    
+                  LENGTH(50)             
+                  JUSLAST                
+                  FREEKB                 
+             END-EXEC                    
+          END-IF.                        

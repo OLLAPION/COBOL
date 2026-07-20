@@ -1,0 +1,166 @@
+      *================================================================*
+       IDENTIFICATION DIVISION.                                         
+       PROGRAM-ID. PRGCALC.                                             
+      *================================================================*
+      * PROGRAMME : PRGCALC                                           * 
+      * OBJET : PARCOURS COMPLET DU DATASET CLIENT (VSAM KSDS)         *
+      *         CALCUL DU NOMBRE DE CLIENTS CREDITEURS ET DU TOTAL     *
+      *         DE DEPOT, DU NOMBRE DE CLIENTS DEBITEURS ET DU TOTAL   *
+      *         D'ENGAGEMENT DE LA BANQUE                              *
+      *================================================================*
+                                                                        
+       ENVIRONMENT DIVISION.                                            
+                                                                        
+       DATA DIVISION.                                                   
+       WORKING-STORAGE SECTION.                                         
+                                                                        
+      *----------------------------------------------------*            
+      * ZONE DE TRAVAIL - COUCHE PRESENTATION                           
+      *----------------------------------------------------*            
+       01  WS-MSG-LIGNE1                PIC X(50).                      
+       01  WS-MSG-LIGNE2                PIC X(50).                      
+       01  WS-MSG-COMPLET.                                              
+           05  WS-MSG-L1                PIC X(80).                      
+           05  WS-MSG-L2                PIC X(80).                      
+       01  WS-LENGTH                    PIC S9(4) COMP VALUE 80.        
+       01  WS-RESP                      PIC S9(8) COMP.                 
+                                                                        
+      *----------------------------------------------------*            
+      * ZONE DE TRAVAIL - COUCHE TRAITEMENT                             
+      * COMPTEURS ET CUMULS (NUMERIQUES POUR CALCUL)                    
+      *----------------------------------------------------*            
+       01  WS-NB-CREDITEURS             PIC 9(05) VALUE ZEROS.          
+       01  WS-NB-DEBITEURS              PIC 9(05) VALUE ZEROS.          
+       01  WS-TOTAL-DEPOT               PIC 9(11) VALUE ZEROS.          
+       01  WS-TOTAL-ENGAGEMENT          PIC 9(11) VALUE ZEROS.          
+       01  WS-SOLDE-NUM                 PIC 9(10) VALUE ZEROS.          
+                                                                        
+       01  WS-FIN-PARCOURS              PIC X(01) VALUE 'N'.            
+           88  FIN-DU-FICHIER           VALUE 'O'.                      
+           88  PAS-FIN-DU-FICHIER       VALUE 'N'.                      
+      *----------------------------------------------------*            
+      * ZONE DE TRAVAIL - COUCHE PHYSIQUE / DONNEES                     
+      * STRUCTURE DE L'ENREGISTREMENT CLIENT (80 CAR.)                  
+      *----------------------------------------------------*            
+       01  WS-ENREG-CLIENT.                                             
+           05  WS-NUM-COMPTE            PIC X(06).                      
+           05  WS-CODE-REGION           PIC X(02).                      
+           05  WS-NATURE-COMPTE         PIC X(02).                      
+           05  WS-NOM-CLIENT            PIC X(10).                      
+           05  WS-PRENOM-CLIENT         PIC X(10).                      
+           05  WS-DATE-NAISSANCE        PIC X(08).                      
+           05  WS-SEXE                  PIC X(01).                      
+           05  WS-ACT-PROFESS           PIC X(02).                      
+           05  WS-SITUATION-SOC         PIC X(01).                      
+           05  WS-ADRESSE               PIC X(10).                      
+           05  WS-SOLDE                 PIC X(10).                      
+           05  WS-POSITION              PIC X(02).                      
+           05  FILLER                   PIC X(16).                      
+
+     *----------------------------------------------------*            
+     * CLE DE DEPART DU PARCOURS (LOW-VALUES = DEPUIS                  
+     * LE TOUT DEBUT DU FICHIER)                                       
+     *----------------------------------------------------*            
+      01  WS-CLE-DEPART                PIC X(06) VALUE LOW-VALUES.     
+                                                                       
+      PROCEDURE DIVISION.                                              
+                                                                       
+     *----------------------------------------------------*            
+     * PARAGRAPHE PRINCIPAL - ORCHESTRATION                            
+     *----------------------------------------------------*            
+      PARA-PRINCIPAL.                                                  
+          PERFORM PARA-OUVERTURE-PARCOURS                              
+          PERFORM PARA-PARCOURS-FICHIER                                
+             UNTIL FIN-DU-FICHIER                                      
+          PERFORM PARA-FERMETURE-PARCOURS                              
+          PERFORM PARA-AFFICHAGE-RESULTAT                              
+          EXEC CICS RETURN                                             
+          END-EXEC.                                                    
+
+     *----------------------------------------------------*            
+     * COUCHE PHYSIQUE / DONNEES : DEMARRAGE DU PARCOURS               
+     *----------------------------------------------------*            
+      PARA-OUVERTURE-PARCOURS.                                         
+          EXEC CICS STARTBR                                            
+               FILE('CLIFI')                                           
+               RIDFLD(WS-CLE-DEPART)                                   
+               GTEQ                                                    
+               RESP(WS-RESP)                                           
+          END-EXEC                                                     
+                                                                       
+          IF WS-RESP NOT = DFHRESP(NORMAL)                             
+             SET FIN-DU-FICHIER TO TRUE                                
+          END-IF.                                                      
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE TRAITEMENT / METIER + PHYSIQUE                           
+     * LECTURE SEQUENTIELLE ET CUMUL                                   
+     *----------------------------------------------------*            
+      PARA-PARCOURS-FICHIER.                                           
+          EXEC CICS READNEXT                                           
+               FILE('CLIFI')                                           
+               INTO(WS-ENREG-CLIENT)                                   
+               LENGTH(WS-LENGTH)                                       
+               RIDFLD(WS-CLE-DEPART)                                   
+               RESP(WS-RESP)                                           
+          END-EXEC                                                     
+                                                                       
+          EVALUATE WS-RESP                                             
+             WHEN DFHRESP(NORMAL)                                      
+                PERFORM PARA-CUMUL-CLIENT                              
+             WHEN DFHRESP(ENDFILE)                                     
+                SET FIN-DU-FICHIER TO TRUE                             
+             WHEN OTHER                                                
+                SET FIN-DU-FICHIER TO TRUE                             
+          END-EVALUATE.                                                
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE TRAITEMENT / METIER : CUMUL SELON POSITION               
+     *----------------------------------------------------*            
+      PARA-CUMUL-CLIENT.                                               
+          MOVE WS-SOLDE TO WS-SOLDE-NUM                                
+                                                                       
+          EVALUATE WS-POSITION                                         
+             WHEN 'CR'                                                 
+                ADD 1            TO WS-NB-CREDITEURS                   
+                ADD WS-SOLDE-NUM TO WS-TOTAL-DEPOT                     
+             WHEN 'DB'                                                 
+                ADD 1            TO WS-NB-DEBITEURS                    
+                ADD WS-SOLDE-NUM TO WS-TOTAL-ENGAGEMENT                
+             WHEN OTHER                                                
+                CONTINUE                                               
+          END-EVALUATE.                                                
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE PHYSIQUE / DONNEES : FERMETURE DU PARCOURS               
+     *----------------------------------------------------*            
+      PARA-FERMETURE-PARCOURS.                                         
+          EXEC CICS ENDBR                                              
+               FILE('CLIFI')                                           
+               RESP(WS-RESP)                                           
+          END-EXEC.                                                    
+                                                                       
+     *----------------------------------------------------*            
+     * COUCHE PRESENTATION : AFFICHAGE DES RESULTATS                   
+     *----------------------------------------------------*            
+      PARA-AFFICHAGE-RESULTAT.                                         
+          MOVE SPACES TO WS-MSG-L1                                     
+          STRING 'CREDITEURS: ' DELIMITED BY SIZE                      
+                 WS-NB-CREDITEURS DELIMITED BY SIZE                    
+                 '  DEPOT TOTAL: ' DELIMITED BY SIZE                   
+                 WS-TOTAL-DEPOT DELIMITED BY SIZE                      
+            INTO WS-MSG-L1                                             
+                                                                       
+          MOVE SPACES TO WS-MSG-L2                                     
+          STRING 'DEBITEURS: ' DELIMITED BY SIZE                       
+                 WS-NB-DEBITEURS DELIMITED BY SIZE                     
+                 '  ENGAGEMENT TOTAL: ' DELIMITED BY SIZE              
+                 WS-TOTAL-ENGAGEMENT DELIMITED BY SIZE                 
+            INTO WS-MSG-L2                                             
+                                                           
+          EXEC CICS SEND TEXT                              
+               FROM(WS-MSG-COMPLET)                        
+               LENGTH(160)                                 
+               ERASE                                       
+               FREEKB                                      
+          END-EXEC.                                        

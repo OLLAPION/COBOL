@@ -1,0 +1,146 @@
+      IDENTIFICATION DIVISION.                                         
+      PROGRAM-ID. PRGREAD.                                             
+     *================================================*                
+     * PROGRAMME : PRGREAD                            *                
+     * OBJET : LECTURE D'UN CLIENT DANS LE DATASET    *                
+     *         CLIENT (VSAM KSDS) ET AFFICHAGE        *                
+     *         DES DONNEES VIA SEND TEXT              *                
+     *================================================*                
+                                                                       
+      ENVIRONMENT DIVISION.                                            
+      DATA DIVISION.                                                   
+      WORKING-STORAGE SECTION.                                         
+                                                                       
+     *----------------------------------------------------*            
+     * ZONE DE TRAVAIL - COUCHE PRESENTATION              *            
+     *----------------------------------------------------*            
+      01  WS-NUM-COMPTE-SAISI      PIC X(06).                          
+                                                                       
+      01  WS-MSG-AFFICHAGE.                                            
+          05  FILLER                PIC X(10) VALUE 'COMPTE : '.       
+          05  WS-MSG-NUMCPT         PIC X(06).                      
+          05  FILLER                PIC X(03) VALUE SPACES.         
+          05  FILLER                PIC X(08) VALUE 'NOM    :'.     
+          05  WS-MSG-NOM            PIC X(10).                      
+          05  FILLER                PIC X(03) VALUE SPACES.         
+          05  FILLER                PIC X(08) VALUE 'ACTPRO :'.     
+          05  WS-MSG-ACTPRO         PIC X(02).                      
+                                                                    
+      01  WS-MSG-ERREUR             PIC X(50).                      
+      01  WS-MSG-LENGTH             PIC S9(4) COMP.                 
+                                                                    
+     *----------------------------------------------------*         
+     * ZONE DE TRAVAIL - COUCHE TRAITEMENT                          
+     *----------------------------------------------------*         
+      01  WS-CODE-RETOUR            PIC X(01).                      
+          88  TRAITEMENT-OK         VALUE 'O'.                      
+          88  TRAITEMENT-KO         VALUE 'N'.                      
+                                                                    
+     *----------------------------------------------------*         
+     * ZONE DE TRAVAIL - COUCHE PHYSIQUE / DONNEES                  
+     * STRUCTURE DE L'ENREGISTREMENT CLIENT (80 CAR.)             
+     *----------------------------------------------------*       
+      01  WS-ENREG-CLIENT.                                        
+          05  WS-NUM-COMPTE         PIC X(06).                    
+          05  WS-CODE-REGION        PIC X(02).                    
+          05  WS-NATURE-COMPTE      PIC X(02).                    
+          05  WS-NOM-CLIENT         PIC X(10).                    
+          05  WS-PRENOM-CLIENT      PIC X(10).                    
+          05  WS-DATE-NAISSANCE     PIC X(08).                    
+          05  WS-SEXE               PIC X(01).                    
+          05  WS-ACT-PROFESS        PIC X(02).                    
+          05  WS-SITUATION-SOC      PIC X(01).                    
+          05  WS-ADRESSE            PIC X(10).                    
+          05  WS-SOLDE              PIC X(10).                    
+          05  WS-POSITION           PIC X(02).                    
+          05  FILLER                PIC X(16).                    
+                                                                  
+      01  WS-LENGTH                 PIC S9(4) COMP VALUE 80.      
+      01  WS-RESP                   PIC S9(8) COMP.               
+
+      PROCEDURE DIVISION.                                       
+                                                                
+     *----------------------------------------------------*     
+     * PARAGRAPHE PRINCIPAL - ORCHESTRATION                     
+     *----------------------------------------------------*     
+      PARA-PRINCIPAL.                                           
+          PERFORM PARA-RECEPTION-DONNEE                         
+          PERFORM PARA-CONTROLE-DONNEE                          
+          IF TRAITEMENT-OK                                      
+             PERFORM PARA-LECTURE-CLIENT                        
+          END-IF                                                
+          PERFORM PARA-AFFICHAGE-RESULTAT                       
+          EXEC CICS RETURN                                      
+          END-EXEC.                                             
+                                                                
+     *----------------------------------------------------*     
+     * COUCHE PRESENTATION : RECEPTION SAISIE UTILISATEUR       
+     *----------------------------------------------------*     
+      PARA-RECEPTION-DONNEE.                                    
+          MOVE '      ' TO WS-NUM-COMPTE-SAISI.                 
+     *    MOVE 6 TO WS-MSG-LENGTH                                  
+     *    EXEC CICS RECEIVE                                        
+     *         INTO(WS-NUM-COMPTE-SAISI)                           
+     *         LENGTH(WS-MSG-LENGTH)                               
+     *         NOHANDLE                                            
+     *         RESP(WS-RESP)                                       
+     *    END-EXEC.                                                
+                                                                   
+     *----------------------------------------------------*        
+     * COUCHE TRAITEMENT / METIER : CONTROLE DE LA SAISIE          
+     *----------------------------------------------------*        
+      PARA-CONTROLE-DONNEE.                                        
+          SET TRAITEMENT-OK TO TRUE                                
+          IF WS-NUM-COMPTE-SAISI = SPACES                          
+             SET TRAITEMENT-KO TO TRUE                             
+             MOVE 'ERREUR : NUMERO DE COMPTE NON SAISI'            
+               TO WS-MSG-ERREUR                                    
+          END-IF.                                                  
+                                                                   
+     *----------------------------------------------------*        
+     * COUCHE PHYSIQUE / DONNEES : ACCES AU VSAM CLIENT             
+     *----------------------------------------------------*         
+      PARA-LECTURE-CLIENT.                                          
+          EXEC CICS READ                                            
+               FILE('CLIFI')                                        
+               INTO(WS-ENREG-CLIENT)                                
+               LENGTH(WS-LENGTH)                                    
+               RIDFLD(WS-NUM-COMPTE-SAISI)                          
+               RESP(WS-RESP)                                        
+          END-EXEC                                                  
+                                                                    
+          EVALUATE WS-RESP                                          
+             WHEN DFHRESP(NORMAL)                                   
+                SET TRAITEMENT-OK TO TRUE                           
+             WHEN DFHRESP(NOTFND)                                   
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : CLIENT INEXISTANT'                   
+                  TO WS-MSG-ERREUR                                  
+             WHEN OTHER                                             
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR TECHNIQUE LECTURE FICHIER'           
+                  TO WS-MSG-ERREUR                                
+          END-EVALUATE.                                           
+                                                                  
+     *----------------------------------------------------*       
+     * COUCHE PRESENTATION : AFFICHAGE RESULTAT (SEND TEXT)       
+     *----------------------------------------------------*       
+      PARA-AFFICHAGE-RESULTAT.                                    
+          IF TRAITEMENT-OK                                        
+             MOVE WS-NUM-COMPTE   TO WS-MSG-NUMCPT                
+             MOVE WS-NOM-CLIENT   TO WS-MSG-NOM                   
+             MOVE WS-ACT-PROFESS  TO WS-MSG-ACTPRO                
+             EXEC CICS SEND TEXT                                  
+                  FROM(WS-MSG-AFFICHAGE)                          
+                  LENGTH(50)                                      
+                  JUSLAST                                         
+                  FREEKB                                          
+             END-EXEC                                             
+          ELSE                                                    
+             EXEC CICS SEND TEXT                    
+                  FROM(WS-MSG-ERREUR)   
+                  LENGTH(50)            
+                  JUSLAST               
+                  FREEKB                
+             END-EXEC                   
+          END-IF.                       

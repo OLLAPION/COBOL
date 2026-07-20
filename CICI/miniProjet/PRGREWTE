@@ -1,0 +1,313 @@
+     *================================================================*
+      IDENTIFICATION DIVISION.                                         
+      PROGRAM-ID. PRGREWTE.                                            
+     *================================================================*
+     * PROGRAMME : PRGREWTE                                          * 
+     * OBJET : MISE A JOUR D'UN ENREGISTREMENT CLIENT EXISTANT        *
+     *         DANS LE DATASET CLIENT (VSAM KSDS)                     *
+     *         CONTROLE DE CONFORMITE DES DONNEES + CONTROLE          *
+     *         D'EXISTENCE AVANT REWRITE                              *
+     *================================================================*
+                                                                       
+      ENVIRONMENT DIVISION.                                            
+                                                                       
+      DATA DIVISION.                                                   
+      WORKING-STORAGE SECTION.                                         
+                                                                       
+     *----------------------------------------------------*            
+     * ZONE DE TRAVAIL - COUCHE PRESENTATION                           
+     *----------------------------------------------------*            
+      01  WS-MSG-AFFICHAGE            PIC X(50).                       
+      01  WS-MSG-ERREUR               PIC X(50).                   
+      01  WS-LENGTH                   PIC S9(4) COMP VALUE 80.     
+      01  WS-RESP                     PIC S9(8) COMP.              
+                                                                   
+     *----------------------------------------------------*        
+     * ZONE DE TRAVAIL - COUCHE TRAITEMENT                         
+     *----------------------------------------------------*        
+      01  WS-CODE-RETOUR              PIC X(01).                   
+          88  TRAITEMENT-OK           VALUE 'O'.                   
+          88  TRAITEMENT-KO           VALUE 'N'.                   
+                                                                   
+     *----------------------------------------------------*        
+     * ZONE DE TRAVAIL - COUCHE PHYSIQUE / DONNEES                 
+     * NOUVELLES VALEURS A ECRIRE (STRUCTURE 80 CAR.)              
+     *----------------------------------------------------*        
+      01  WS-ENREG-CLIENT.                                         
+          05  WS-NUM-COMPTE           PIC X(06).                   
+          05  WS-CODE-REGION          PIC X(02).                   
+          05  WS-NATURE-COMPTE        PIC X(02).                   
+          05  WS-NOM-CLIENT           PIC X(10).                   
+          05  WS-PRENOM-CLIENT        PIC X(10).               
+          05  WS-DATE-NAISSANCE.                               
+              10  WS-ANNEE-NAIS       PIC X(04).               
+              10  WS-MOIS-NAIS        PIC X(02).               
+              10  WS-JOUR-NAIS        PIC X(02).               
+          05  WS-SEXE                 PIC X(01).               
+          05  WS-ACT-PROFESS          PIC X(02).               
+          05  WS-SITUATION-SOC        PIC X(01).               
+          05  WS-ADRESSE              PIC X(10).               
+          05  WS-SOLDE                PIC X(10).               
+          05  WS-POSITION             PIC X(02).               
+          05  FILLER                  PIC X(16).               
+                                                               
+     *----------------------------------------------------*    
+     * ZONE UTILISEE POUR LE READ PREALABLE (OBLIGATOIRE       
+     * AVANT UN REWRITE EN CICS/VSAM)                          
+     *----------------------------------------------------*    
+      01  WS-ENREG-EXISTANT           PIC X(80).               
+                                                               
+      01  WS-MOIS-NUM                 PIC 9(02).               
+      01  WS-JOUR-NUM                 PIC 9(02).                 
+                                                                 
+      PROCEDURE DIVISION.                                        
+                                                                 
+     *----------------------------------------------------*      
+     * PARAGRAPHE PRINCIPAL - ORCHESTRATION                      
+     *----------------------------------------------------*      
+      PARA-PRINCIPAL.                                            
+          PERFORM PARA-INIT-DONNEE                               
+          PERFORM PARA-CONTROLE-CONFORMITE                       
+          IF TRAITEMENT-OK                                       
+             PERFORM PARA-CONTROLE-EXISTENCE                     
+          END-IF                                                 
+          IF TRAITEMENT-OK                                       
+             PERFORM PARA-MISE-A-JOUR-CLIENT                     
+          END-IF                                                 
+          PERFORM PARA-AFFICHAGE-RESULTAT                        
+          EXEC CICS RETURN                                       
+          END-EXEC.                                              
+
+     *----------------------------------------------------*  
+     * COUCHE PRESENTATION : NOUVELLES DONNEES DU CLIENT     
+     * A METTRE A JOUR, FIXEES EN DUR                        
+     *----------------------------------------------------*  
+      PARA-INIT-DONNEE.                                      
+          MOVE '000021'      TO WS-NUM-COMPTE                
+          MOVE '01'          TO WS-CODE-REGION               
+          MOVE '20'          TO WS-NATURE-COMPTE             
+          MOVE 'DUPONT'      TO WS-NOM-CLIENT                
+          MOVE 'PIERRE'      TO WS-PRENOM-CLIENT             
+          MOVE '19900615'    TO WS-DATE-NAISSANCE            
+          MOVE 'M'           TO WS-SEXE                      
+          MOVE '10'          TO WS-ACT-PROFESS               
+          MOVE 'M'           TO WS-SITUATION-SOC             
+          MOVE 'BORDEAUX'    TO WS-ADRESSE                   
+          MOVE '0000032000'  TO WS-SOLDE                     
+          MOVE 'CR'          TO WS-POSITION.                 
+                                                             
+     *----------------------------------------------------*  
+     * COUCHE TRAITEMENT / METIER                            
+     * CONTROLE DE CONFORMITE - MEME PRINCIPE QUE PRGWRITE             
+     *----------------------------------------------------*            
+      PARA-CONTROLE-CONFORMITE.                                        
+          SET TRAITEMENT-OK TO TRUE                                    
+                                                                       
+          IF WS-NUM-COMPTE = SPACES                                    
+             SET TRAITEMENT-KO TO TRUE                                 
+             MOVE 'ERREUR : NUMERO DE COMPTE VIDE'                     
+               TO WS-MSG-ERREUR                                        
+          END-IF                                                       
+                                                                       
+          IF TRAITEMENT-OK                                             
+             IF WS-NUM-COMPTE IS NOT NUMERIC                           
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR : NUMERO DE COMPTE NON NUMERIQUE'         
+                  TO WS-MSG-ERREUR                                     
+             END-IF                                                    
+          END-IF                                                       
+                                                                       
+          IF TRAITEMENT-OK                                             
+             IF WS-CODE-REGION IS NOT NUMERIC                       
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : CODE REGION NON NUMERIQUE'           
+                  TO WS-MSG-ERREUR                                  
+             END-IF                                                 
+          END-IF                                                    
+                                                                    
+          IF TRAITEMENT-OK                                          
+             IF WS-NATURE-COMPTE IS NOT NUMERIC                     
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : NATURE COMPTE NON NUMERIQUE'         
+                  TO WS-MSG-ERREUR                                  
+             END-IF                                                 
+          END-IF                                                    
+                                                                    
+          IF TRAITEMENT-OK                                          
+             IF WS-NOM-CLIENT = SPACES                              
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : NOM CLIENT VIDE'                     
+                  TO WS-MSG-ERREUR                                  
+             END-IF                                          
+          END-IF                                             
+                                                             
+          IF TRAITEMENT-OK                                   
+             IF WS-NOM-CLIENT IS NOT ALPHABETIC              
+                SET TRAITEMENT-KO TO TRUE                    
+                MOVE 'ERREUR : NOM CLIENT NON ALPHABETIQUE'  
+                  TO WS-MSG-ERREUR                           
+             END-IF                                          
+          END-IF                                             
+                                                             
+          IF TRAITEMENT-OK                                   
+             IF WS-PRENOM-CLIENT = SPACES                    
+                SET TRAITEMENT-KO TO TRUE                    
+                MOVE 'ERREUR : PRENOM CLIENT VIDE'           
+                  TO WS-MSG-ERREUR                           
+             END-IF                                          
+          END-IF                                             
+                                                             
+          IF TRAITEMENT-OK                                   
+             IF WS-PRENOM-CLIENT IS NOT ALPHABETIC                  
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : PRENOM CLIENT NON ALPHABETIQUE'      
+                  TO WS-MSG-ERREUR                                  
+             END-IF                                                 
+          END-IF                                                    
+                                                                    
+          IF TRAITEMENT-OK                                          
+             IF WS-DATE-NAISSANCE IS NOT NUMERIC                    
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : DATE NAISSANCE NON NUMERIQUE'        
+                  TO WS-MSG-ERREUR                                  
+             END-IF                                                 
+          END-IF                                                    
+                                                                    
+          IF TRAITEMENT-OK                                          
+             MOVE WS-MOIS-NAIS TO WS-MOIS-NUM                       
+             MOVE WS-JOUR-NAIS TO WS-JOUR-NUM                       
+             IF WS-MOIS-NUM < 1 OR WS-MOIS-NUM > 12                 
+                SET TRAITEMENT-KO TO TRUE                           
+                MOVE 'ERREUR : MOIS DE NAISSANCE INVALIDE'        
+                  TO WS-MSG-ERREUR                                
+             END-IF                                               
+          END-IF                                                  
+                                                                  
+          IF TRAITEMENT-OK                                        
+             IF WS-JOUR-NUM < 1 OR WS-JOUR-NUM > 31               
+                SET TRAITEMENT-KO TO TRUE                         
+                MOVE 'ERREUR : JOUR DE NAISSANCE INVALIDE'        
+                  TO WS-MSG-ERREUR                                
+             END-IF                                               
+          END-IF                                                  
+                                                                  
+          IF TRAITEMENT-OK                                        
+             IF WS-SEXE NOT = 'M' AND WS-SEXE NOT = 'F'           
+                SET TRAITEMENT-KO TO TRUE                         
+                MOVE 'ERREUR : SEXE INVALIDE (M OU F ATTENDU)'    
+                  TO WS-MSG-ERREUR                                
+             END-IF                                               
+          END-IF                                                  
+                                                                     
+          IF TRAITEMENT-OK                                           
+             IF WS-ACT-PROFESS IS NOT NUMERIC                        
+                SET TRAITEMENT-KO TO TRUE                            
+                MOVE 'ERREUR : ACTIVITE PROFESSIONNELLE INVALIDE'    
+                  TO WS-MSG-ERREUR                                   
+             END-IF                                                  
+          END-IF                                                     
+                                                                     
+          IF TRAITEMENT-OK                                           
+             IF WS-SITUATION-SOC NOT = 'C' AND                       
+                WS-SITUATION-SOC NOT = 'M' AND                       
+                WS-SITUATION-SOC NOT = 'D' AND                       
+                WS-SITUATION-SOC NOT = 'V'                           
+                SET TRAITEMENT-KO TO TRUE                            
+                MOVE 'ERREUR : SITUATION SOCIALE INVALIDE'           
+                  TO WS-MSG-ERREUR                                   
+             END-IF                                                  
+          END-IF                                                     
+
+          IF TRAITEMENT-OK                                             
+             IF WS-ADRESSE = SPACES                                    
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR : ADRESSE VIDE'                           
+                  TO WS-MSG-ERREUR                                     
+             END-IF                                                    
+          END-IF                                                       
+                                                                       
+          IF TRAITEMENT-OK                                             
+             IF WS-SOLDE IS NOT NUMERIC                                
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR : SOLDE NON NUMERIQUE'                    
+                  TO WS-MSG-ERREUR                                     
+             END-IF                                                    
+          END-IF                                                       
+                                                                       
+          IF TRAITEMENT-OK                                             
+             IF WS-POSITION NOT = 'DB' AND WS-POSITION NOT = 'CR'      
+                SET TRAITEMENT-KO TO TRUE                              
+                MOVE 'ERREUR : POSITION INVALIDE (DB OU CR ATTENDU)'   
+                  TO WS-MSG-ERREUR                                   
+             END-IF                                                  
+          END-IF.                                                    
+                                                                     
+     *----------------------------------------------------*          
+     * COUCHE PHYSIQUE / DONNEES                                     
+     * CONTROLE D'EXISTENCE : LE CLIENT DOIT DEJA EXISTER            
+     * (LE READ EST AUSSI OBLIGATOIRE AVANT UN REWRITE)              
+     *----------------------------------------------------*          
+      PARA-CONTROLE-EXISTENCE.                                       
+          EXEC CICS READ                                             
+               FILE('CLIFI')                                         
+               INTO(WS-ENREG-EXISTANT)                               
+               LENGTH(WS-LENGTH)                                     
+               RIDFLD(WS-NUM-COMPTE)                                 
+               UPDATE                                                
+               RESP(WS-RESP)                                         
+          END-EXEC                                                   
+                                                                     
+          EVALUATE WS-RESP                                           
+             WHEN DFHRESP(NORMAL)                                  
+                SET TRAITEMENT-OK TO TRUE                          
+             WHEN DFHRESP(NOTFND)                                  
+                SET TRAITEMENT-KO TO TRUE                          
+                MOVE 'ERREUR : CLIENT INEXISTANT, MAJ IMPOSSIBLE'  
+                  TO WS-MSG-ERREUR                                 
+             WHEN OTHER                                            
+                SET TRAITEMENT-KO TO TRUE                          
+                MOVE 'ERREUR TECHNIQUE CONTROLE EXISTENCE'         
+                  TO WS-MSG-ERREUR                                 
+          END-EVALUATE.                                            
+                                                                   
+     *----------------------------------------------------*        
+     * COUCHE PHYSIQUE / DONNEES : MISE A JOUR (REWRITE)           
+     *----------------------------------------------------*        
+      PARA-MISE-A-JOUR-CLIENT.                                     
+          EXEC CICS REWRITE                                        
+               FILE('CLIFI')                                       
+               FROM(WS-ENREG-CLIENT)                               
+               LENGTH(WS-LENGTH)                                   
+               RESP(WS-RESP)                                     
+          END-EXEC                                               
+                                                                 
+          EVALUATE WS-RESP                                       
+             WHEN DFHRESP(NORMAL)                                
+                SET TRAITEMENT-OK TO TRUE                        
+             WHEN OTHER                                          
+                SET TRAITEMENT-KO TO TRUE                        
+                MOVE 'ERREUR TECHNIQUE MISE A JOUR FICHIER'      
+                  TO WS-MSG-ERREUR                               
+          END-EVALUATE.                                          
+                                                                 
+     *----------------------------------------------------*      
+     * COUCHE PRESENTATION : AFFICHAGE RESULTAT                  
+     *----------------------------------------------------*      
+      PARA-AFFICHAGE-RESULTAT.                                   
+          IF TRAITEMENT-OK                                       
+             MOVE 'CLIENT MODIFIE : ' TO WS-MSG-AFFICHAGE        
+             MOVE WS-NUM-COMPTE      TO WS-MSG-AFFICHAGE(19:6)   
+             EXEC CICS SEND TEXT                                 
+                  FROM(WS-MSG-AFFICHAGE)         
+                  LENGTH(50)                     
+                  JUSLAST                        
+                  FREEKB                         
+             END-EXEC                            
+          ELSE                                   
+             EXEC CICS SEND TEXT                 
+                  FROM(WS-MSG-ERREUR)            
+                  LENGTH(50)                     
+                  JUSLAST                        
+                  FREEKB                         
+             END-EXEC                            
+          END-IF.                                

@@ -1,0 +1,117 @@
+       IDENTIFICATION DIVISION.                                 
+       PROGRAM-ID. TEST1.                                       
+       ENVIRONMENT DIVISION.                                    
+       INPUT-OUTPUT SECTION.                                    
+       FILE-CONTROL.                                            
+           SELECT CLIENT       ASSIGN TO CLTKSDS                
+               ORGANIZATION IS INDEXED                          
+               ACCESS       IS RANDOM                           
+               RECORD KEY IS CODCLT                             
+               FILE STATUS IS FSCLT.                            
+           SELECT MVTCLT       ASSIGN TO AS-MVTESDS             
+               ORGANIZATION IS SEQUENTIAL                       
+               FILE STATUS IS FSMVT.                            
+           SELECT REPORT-FILE  ASSIGN TO RPTOUT                 
+               ORGANIZATION IS SEQUENTIAL.                      
+                                                                
+       DATA DIVISION.                                           
+       FILE SECTION.                                            
+       FD  CLIENT.                                              
+       01  CLIENT-REC.                                     
+           05 CODCLT                PIC X(6).              
+           05 NOMCLT                PIC X(10).             
+           05 PRNCLT                PIC X(10).             
+           05 ADRCLT                PIC X(10).             
+           05 SLDCLT                PIC 9(6)V9(2).         
+           05 SLDMOY                PIC 9(6)V9(2).         
+           05 HISTCLT               PIC X(2).              
+           05 FILLER                PIC X(26).             
+                                                           
+       FD  MVTCLT.                                         
+       01  MVTCLT-REC.                                     
+           05 CODCLTM               PIC X(6).              
+           05 DATMVT                PIC X(8).              
+           05 VALMVT                PIC 9(6)V9(2).         
+           05 NATMVT                PIC X(2).              
+           05 FILLER                PIC X(56).             
+                                                           
+       FD  REPORT-FILE.                                    
+       01  REPORT-REC               PIC X(80).             
+                                                              
+       WORKING-STORAGE SECTION.                               
+       01  WS-EOF-IO                PIC X VALUE 'N'.          
+           88 FIN-CLIENT VALUE 'Y'.                           
+       01  WS-EOF-IN                PIC X VALUE 'N'.          
+           88 FIN-MVTCLT VALUE 'Y'.                           
+                                                              
+       01  WS-CURRENT-CLT           PIC X(6) VALUE SPACES.    
+       01  WS-SOLDE-CALC            PIC S9(6)V9(2) COMP-3.    
+       01  WS-MVT-VALEUR            PIC S9(6)V9(2) COMP-3.    
+       01  WS-FOUND                 PIC X.                    
+                                                              
+       01  WS-REPORT-LINE.                                    
+           05 RL-CODCLT              PIC X(6).                
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-CALCULE             PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-ATTENDU             PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-ECART               PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-STATUT              PIC X(24).               
+                                                              
+       01  WS-CHGT-CLT               PIC X.                   
+       01  FSCLT                  PIC X(2).                   
+       01  FSMVT                     PIC X(2).                
+                                                              
+       PROCEDURE DIVISION.                                    
+           OPEN I-O    CLIENT                                 
+           OPEN INPUT  MVTCLT                                 
+           OPEN OUTPUT REPORT-FILE                            
+                                                              
+           READ MVTCLT                                        
+               AT END MOVE 'Y' TO WS-EOF-IN                   
+           END-READ                                           
+                                                              
+           PERFORM UNTIL WS-EOF-IN = 'Y'                      
+               MOVE CODCLTM TO CODCLT                         
+               READ CLIENT                                    
+                   INVALID KEY MOVE 'Y' TO WS-EOF-IO          
+                   NOT INVALID KEY                                      
+                       MOVE VALMVT TO WS-MVT-VALEUR                     
+                       MOVE SLDMOY TO WS-SOLDE-CALC                     
+                       EVALUATE NATMVT                                  
+                           WHEN 'DB'                                    
+                               COMPUTE WS-SOLDE-CALC =                  
+                                   (WS-SOLDE-CALC - WS-MVT-VALEUR) / 2  
+                               MOVE WS-SOLDE-CALC TO SLDMOY             
+                               REWRITE CLIENT-REC                       
+                                  INVALID KEY DISPLAY 'CLIENT INEXISTA' 
+                               END-REWRITE                              
+                           WHEN 'CR'                                    
+                               COMPUTE WS-SOLDE-CALC =                  
+                                   (WS-SOLDE-CALC + WS-MVT-VALEUR) / 2  
+                               MOVE WS-SOLDE-CALC TO SLDMOY             
+                               REWRITE CLIENT-REC                       
+                                  INVALID KEY DISPLAY 'CLIENT INEXISTA' 
+                               END-REWRITE                              
+                       END-EVALUATE                                     
+               END-READ                                                 
+               READ MVTCLT                          
+                   AT END MOVE 'Y' TO WS-EOF-IN     
+               END-READ                             
+           END-PERFORM.                             
+                                                    
+           CLOSE CLIENT MVTCLT                      
+           CLOSE REPORT-FILE                        
+           DISPLAY 'TESTMOY - TEST UNITAIRE TERMINE'
+           STOP RUN.                                
+
+
+
+
+
+
+
+
+

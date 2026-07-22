@@ -1,0 +1,19 @@
+//CLTTEST  JOB (ACCT),'TEST UNITAIRE',CLASS=A,MSGCLASS=A,         
+//             NOTIFY=&SYSUID                                     
+//*--------------------------------------------------------------*
+//* TEST UNITAIRE ISOLE DE LA FORMULE METIER (POINT 2 DE L'ENONCE)
+//* NE DEPEND D'AUCUN VSAM NI DU JCL DE PRODUCTION COMPLET.       
+//*--------------------------------------------------------------*
+//STEP010  EXEC PGM=TESTMOYC                                      
+//STEPLIB  DD DSN=CLTEXO.LOAD,DISP=SHR                            
+//TESTIN   DD *                                                   
+CLI00100001000DB                                                  
+CLI00100002000CR                                                  
+CLI00100003000CR                                                  
+/*                                                                
+//TESTIO   DD *                                                   
+CLI001+00005000+00002500                                          
+/*                                                                
+//RPTOUT   DD SYSOUT=*                                            
+//SYSOUT   DD SYSOUT=*                                            
+//                                                                

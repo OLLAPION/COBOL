@@ -1,0 +1,226 @@
+       IDENTIFICATION DIVISION.                         
+       PROGRAM-ID. TESTMOY.                             
+       ENVIRONMENT DIVISION.                            
+       INPUT-OUTPUT SECTION.                            
+       FILE-CONTROL.                                    
+           SELECT TESTIN-FILE  ASSIGN TO TESTIN         
+               ORGANIZATION IS SEQUENTIAL.              
+           SELECT TESTIO-FILE  ASSIGN TO TESTIO         
+               ORGANIZATION IS SEQUENTIAL.              
+           SELECT REPORT-FILE  ASSIGN TO RPTOUT         
+               ORGANIZATION IS SEQUENTIAL.              
+                                                        
+       DATA DIVISION.                                   
+       FILE SECTION.                                    
+       FD  TESTIN-FILE.                                 
+       01  TESTIN-REC.                                  
+           05 IN-CODCLT             PIC X(6).           
+           05 IN-VALMVT             PIC 9(6)V9(2).      
+           05 IN-NATMVT             PIC X(2).           
+           05 FILLER                PIC X(64).                    
+                                                                  
+       FD  TESTIO-FILE.                                           
+       01  TESTIO-REC.                                            
+           05 IO-CODCLT             PIC X(6).                     
+           05 IO-SOLMOY             PIC S9(6)V9(2) SIGN LEADING   
+                                        SEPARATE CHARACTER.       
+           05 IO-SOLRESUL           PIC S9(6)V9(2) SIGN LEADING   
+                                        SEPARATE CHARACTER.       
+           05 FILLER                PIC X(56).                    
+                                                                  
+       FD  REPORT-FILE.                                           
+       01  REPORT-REC               PIC X(80).                    
+                                                                  
+       WORKING-STORAGE SECTION.                                   
+       01  WS-EOF-IN                PIC X VALUE 'N'.              
+           88 FIN-TESTIN VALUE 'Y'.                               
+       01  WS-EOF-IO                PIC X VALUE 'N'.              
+           88 FIN-TESTIO VALUE 'Y'.                               
+       01  WS-TABLE-IO.                                               
+           05 WS-IO-ENTRY OCCURS 50 TIMES INDEXED BY IDX.             
+              10 WS-IO-CODCLT       PIC X(6).                         
+              10 WS-IO-SOLMOY       PIC S9(6)V9(2) COMP-3.            
+              10 WS-IO-SOLRESUL     PIC S9(6)V9(2) COMP-3.            
+              10 WS-IO-USED         PIC X VALUE 'N'.                  
+       01  WS-NB-IO                 PIC 9(3) VALUE 0.                 
+                                                                      
+       01  WS-CURRENT-CLT           PIC X(6) VALUE SPACES.            
+       01  WS-SOLDE-CALC            PIC S9(6)V9(2) COMP-3.            
+       01  WS-MVT-VALEUR            PIC S9(6)V9(2) COMP-3.            
+       01  WS-FOUND                 PIC X.                            
+       01  WS-ECART                 PIC S9(6)V9(2) COMP-3.            
+                                                                      
+       01  WS-HEADER-1               PIC X(80) VALUE                  
+                  'CODCLT SOLDE CALCULE SOLDE ATTENDU ECART STATUT'.  
+       01  WS-HEADER-2               PIC X(80) VALUE ALL '-'.         
+                                                                      
+       01  WS-REPORT-LINE.                                            
+           05 RL-CODCLT              PIC X(6).                        
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-CALCULE             PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-ATTENDU             PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-ECART               PIC -(6)9.99.            
+           05 FILLER                 PIC X(3)  VALUE SPACES.  
+           05 RL-STATUT              PIC X(24).               
+                                                              
+       01  VARCOMP                  PIC 9(6)V9(2) COMP-3.     
+       01  VARSTAND                 PIC 9(6)V9(2).            
+       01  VARCOMP2                 PIC 9(6)V9(2) COMP-3.     
+       PROCEDURE DIVISION.                                    
+       0000-MAIN.                                             
+           PERFORM 0100-CHARGER-TESTIO               
+                                                     
+           OPEN INPUT  TESTIN-FILE                   
+           OPEN OUTPUT REPORT-FILE                   
+                                                     
+           MOVE WS-HEADER-1 TO REPORT-REC            
+           WRITE REPORT-REC                          
+           MOVE WS-HEADER-2 TO REPORT-REC            
+           WRITE REPORT-REC                          
+                                                     
+           READ TESTIN-FILE                          
+               AT END MOVE 'Y' TO WS-EOF-IN          
+           END-READ                                  
+                                                     
+           PERFORM UNTIL FIN-TESTIN                  
+               IF IN-CODCLT NOT = WS-CURRENT-CLT     
+                   IF WS-CURRENT-CLT NOT = SPACES    
+                       PERFORM 0300-COMPARER-CLIENT  
+                   END-IF                            
+                   MOVE IN-CODCLT TO WS-CURRENT-CLT  
+                   PERFORM 0200-INIT-SOLDE                             
+               END-IF                                                  
+                                                                       
+               MOVE IN-VALMVT TO WS-MVT-VALEUR                         
+               EVALUATE IN-NATMVT                                      
+                   WHEN 'DB'                                           
+                       COMPUTE WS-SOLDE-CALC =                         
+                           (WS-SOLDE-CALC - WS-MVT-VALEUR) / 2         
+                   WHEN 'CR'                                           
+                       COMPUTE WS-SOLDE-CALC =                         
+                           (WS-SOLDE-CALC + WS-MVT-VALEUR) / 2         
+                   WHEN OTHER                                          
+                       DISPLAY 'TESTMOY - MOUVEMENT INVALIDE IGNORE : '
+                           IN-CODCLT ' NATMVT=[' IN-NATMVT ']'         
+               END-EVALUATE                                            
+                                                                       
+               READ TESTIN-FILE                                        
+                   AT END MOVE 'Y' TO WS-EOF-IN                        
+               END-READ                                                
+           END-PERFORM                                                 
+                                                      
+           IF WS-CURRENT-CLT NOT = SPACES             
+               PERFORM 0300-COMPARER-CLIENT           
+           END-IF                                     
+                                                      
+           PERFORM 0400-CLIENTS-SANS-MOUVEMENT        
+                                                      
+           CLOSE TESTIN-FILE                          
+           CLOSE REPORT-FILE                          
+           DISPLAY 'TESTMOY - TEST UNITAIRE TERMINE'  
+           STOP RUN.                                  
+                                                      
+       0100-CHARGER-TESTIO.                           
+           OPEN INPUT TESTIO-FILE                     
+           READ TESTIO-FILE                           
+               AT END MOVE 'Y' TO WS-EOF-IO           
+           END-READ                                   
+           PERFORM UNTIL FIN-TESTIO                   
+               ADD 1 TO WS-NB-IO                      
+               SET IDX TO WS-NB-IO                    
+               MOVE IO-CODCLT   TO WS-IO-CODCLT(IDX)            
+               MOVE IO-SOLMOY   TO WS-IO-SOLMOY(IDX)            
+               MOVE IO-SOLRESUL TO WS-IO-SOLRESUL(IDX)          
+               MOVE 'N'         TO WS-IO-USED(IDX)              
+               READ TESTIO-FILE                                 
+                   AT END MOVE 'Y' TO WS-EOF-IO                 
+               END-READ                                         
+           END-PERFORM                                          
+           CLOSE TESTIO-FILE.                                   
+                                                                
+       0200-INIT-SOLDE.                                         
+      *    RECHERCHE DU SOLDE MOYEN DE DEPART DANS TESTIO       
+           MOVE 0 TO WS-SOLDE-CALC                              
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > WS-NB-IO 
+               IF WS-IO-CODCLT(IDX) = WS-CURRENT-CLT            
+                   MOVE WS-IO-SOLMOY(IDX) TO WS-SOLDE-CALC      
+                   MOVE 'Y' TO WS-IO-USED(IDX)                  
+               END-IF                                           
+           END-PERFORM.                                         
+       0300-COMPARER-CLIENT.                                    
+      *    COMPARAISON DU SOLDE CALCULE AU SOLRESUL ATTENDU     
+           MOVE 'N' TO WS-FOUND                                 
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > WS-NB-IO 
+               IF WS-IO-CODCLT(IDX) = WS-CURRENT-CLT            
+                   MOVE 'Y' TO WS-FOUND                         
+                   COMPUTE WS-ECART =                           
+                       WS-SOLDE-CALC - WS-IO-SOLRESUL(IDX)      
+                   MOVE WS-CURRENT-CLT      TO RL-CODCLT        
+                   MOVE WS-SOLDE-CALC       TO RL-CALCULE       
+                   MOVE WS-IO-SOLRESUL(IDX) TO RL-ATTENDU       
+                   MOVE WS-ECART            TO RL-ECART         
+                   IF WS-ECART = 0                              
+                       MOVE 'OK'                TO RL-STATUT    
+                   ELSE                                         
+                       MOVE 'KO - ECART DETECTE' TO RL-STATUT   
+                   END-IF                                       
+                   MOVE WS-REPORT-LINE TO REPORT-REC            
+                   WRITE REPORT-REC                             
+               END-IF                                           
+           END-PERFORM                                            
+                                                                  
+           IF WS-FOUND = 'N'                                      
+               MOVE WS-CURRENT-CLT       TO RL-CODCLT             
+               MOVE WS-SOLDE-CALC        TO RL-CALCULE            
+               MOVE 0                    TO RL-ATTENDU            
+               MOVE 0                    TO RL-ECART              
+               MOVE 'KO - CLIENT INEXISTANT' TO RL-STATUT         
+               MOVE WS-REPORT-LINE TO REPORT-REC                  
+               WRITE REPORT-REC                                   
+           END-IF.                                                
+                                                                  
+       0400-CLIENTS-SANS-MOUVEMENT.                               
+      *    CLIENTS PRESENTS DANS TESTIO MAIS JAMAIS RENCONTRES    
+      *    DANS TESTIN (AUCUN MOUVEMENT) : LE SOLDE NE DOIT PAS   
+      *    AVOIR CHANGE, ON COMPARE DIRECTEMENT SOLMOY/SOLRESUL   
+           PERFORM VARYING IDX FROM 1 BY 1 UNTIL IDX > WS-NB-IO   
+               IF WS-IO-USED(IDX) = 'N'                           
+                   COMPUTE WS-ECART =                             
+                       WS-IO-SOLMOY(IDX) - WS-IO-SOLRESUL(IDX)    
+                   MOVE WS-IO-CODCLT(IDX)   TO RL-CODCLT       
+                   MOVE WS-IO-SOLMOY(IDX)   TO RL-CALCULE      
+                   MOVE WS-IO-SOLRESUL(IDX) TO RL-ATTENDU      
+                   MOVE WS-ECART            TO RL-ECART        
+                   IF WS-ECART = 0                             
+                       MOVE 'OK - SANS MOUVEMENT'  TO RL-STATUT
+                   ELSE                                        
+                       MOVE 'KO - SANS MOUVEMENT'  TO RL-STATUT
+                   END-IF                                      
+                   MOVE WS-REPORT-LINE TO REPORT-REC           
+                   WRITE REPORT-REC                            
+               END-IF                                          
+           END-PERFORM.                                        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
